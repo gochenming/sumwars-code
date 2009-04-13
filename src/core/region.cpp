@@ -1506,7 +1506,7 @@ void Region::getRegionData(CharConv* cv)
 	}
 
 	// Anzahl der statischen Objekte eintragen
-	DEBUG("static objects: %i",m_static_objects->size());
+	DEBUG5("static objects: %i",m_static_objects->size());
 	cv->toBuffer<short>((short) m_static_objects->size());
 
 	// statische Objekte in den Puffer eintragen
@@ -1514,7 +1514,7 @@ void Region::getRegionData(CharConv* cv)
 	for (it = m_static_objects->begin();it!=m_static_objects->end();++it)
 	{
 		(it->second)->toString(cv);
-		DEBUG("static object: %s",(it->second)->getNameId().c_str());
+		DEBUG5("static object: %s",(it->second)->getNameId().c_str());
 	}
 
 

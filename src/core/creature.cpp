@@ -2633,7 +2633,7 @@ void Creature::gainExperience (float exp)
 
 void Creature::gainLevel()
 {
-	addToNetEventMask(NetEvent::DATA_LEVEL);
+	addToNetEventMask(NetEvent::DATA_ATTRIBUTES_LEVEL);
 
 }
 
@@ -3571,15 +3571,15 @@ void Creature::applyBaseAttrMod(CreatureBaseAttrMod* mod, bool add)
 	// Modifikationen feststellen
 	if (mod->m_dwalk_speed!=0 )
 	{
-		addToNetEventMask(NetEvent::DATA_WALK_SPEED);
+		addToNetEventMask(NetEvent::DATA_ATTACK_WALK_SPEED);
 	}
 	if (mod->m_dattack_speed !=0 || mod->m_ddexterity!=0)
 	{
-		addToNetEventMask(NetEvent::DATA_ATTACK_SPEED);
+		addToNetEventMask(NetEvent::DATA_ATTACK_WALK_SPEED);
 	}
 	if (mod->m_dmax_health !=0 || mod->m_dstrength!=0)
 	{
-		addToNetEventMask(NetEvent::DATA_MAX_HP | NetEvent::DATA_HP);
+		addToNetEventMask(NetEvent::DATA_ATTRIBUTES_LEVEL | NetEvent::DATA_HP);
 	}
 
 	// einige Untergrenzen pruefen
@@ -3654,15 +3654,15 @@ bool Creature::removeBaseAttrMod(CreatureBaseAttrMod* mod)
 	// Modifikationen feststellen
 	if (mod->m_dwalk_speed!=0)
 	{
-		addToNetEventMask(NetEvent::DATA_WALK_SPEED);
+		addToNetEventMask(NetEvent::DATA_ATTACK_WALK_SPEED);
 	}
 	if (mod->m_dattack_speed !=0 || mod->m_ddexterity!=0)
 	{
-		addToNetEventMask(NetEvent::DATA_ATTACK_SPEED);
+		addToNetEventMask(NetEvent::DATA_ATTACK_WALK_SPEED);
 	}
 	if (mod->m_dmax_health !=0 || mod->m_dstrength!=0)
 	{
-		addToNetEventMask(NetEvent::DATA_MAX_HP | NetEvent::DATA_HP);
+		addToNetEventMask(NetEvent::DATA_ATTRIBUTES_LEVEL | NetEvent::DATA_HP);
 	}
 
 	for (i=0;i<4;i++)
@@ -4070,7 +4070,7 @@ void Creature::writeNetEvent(NetEvent* event, CharConv* cv)
 		cv->toBuffer(getDynAttr()->m_health);
 	}
 
-	if (event->m_data & NetEvent::DATA_MAX_HP)
+	if (event->m_data & NetEvent::DATA_ATTRIBUTES_LEVEL)
 	{
 		cv->toBuffer(getBaseAttrMod()->m_max_health);
 	}
@@ -4117,15 +4117,12 @@ void Creature::writeNetEvent(NetEvent* event, CharConv* cv)
 		cv->toBuffer((char) getState());
 	}
 
-	if (event->m_data & NetEvent::DATA_WALK_SPEED)
+	if (event->m_data & NetEvent::DATA_ATTACK_WALK_SPEED)
 	{
 		cv->toBuffer(getBaseAttrMod()->m_walk_speed);
-	}
-
-	if (event->m_data & NetEvent::DATA_ATTACK_SPEED)
-	{
 		cv->toBuffer(getBaseAttrMod()->m_attack_speed);
 	}
+
 
 	if (event->m_data & NetEvent::DATA_NEXT_COMMAND)
 	{
@@ -4150,16 +4147,21 @@ void Creature::writeNetEvent(NetEvent* event, CharConv* cv)
 		cv->toBuffer(getDynAttr()->m_experience);
 	}
 
-	if (event->m_data & NetEvent::DATA_MOVE_INFO)
+	if (event->m_data & NetEvent::DATA_SPEED)
 	{
 		cv->toBuffer(getSpeed().m_x);
 		cv->toBuffer(getSpeed().m_y);
 	}
 
-	if (event->m_data & NetEvent::DATA_LEVEL)
+	if (event->m_data & NetEvent::DATA_ATTRIBUTES_LEVEL)
 	{
 		cv->toBuffer(getBaseAttr()->m_level);
 		cv->toBuffer(getBaseAttr()->m_max_experience);
+		cv->toBuffer(getBaseAttr()->m_max_health);
+		cv->toBuffer(getBaseAttr()->m_strength);
+		cv->toBuffer(getBaseAttr()->m_dexterity);
+		cv->toBuffer(getBaseAttr()->m_willpower);
+		cv->toBuffer(getBaseAttr()->m_magic_power);
 	}
 	
 	if (event->m_data & NetEvent::DATA_SPEAK_TEXT)
@@ -4236,7 +4238,7 @@ void Creature::processNetEvent(NetEvent* event, CharConv* cv)
 		cv->fromBuffer(getDynAttr()->m_health);
 	}
 
-	if (event->m_data & NetEvent::DATA_MAX_HP)
+	if (event->m_data & NetEvent::DATA_ATTRIBUTES_LEVEL)
 	{
 		cv->fromBuffer(getBaseAttrMod()->m_max_health);
 	}
@@ -4286,13 +4288,9 @@ void Creature::processNetEvent(NetEvent* event, CharConv* cv)
 
 	}
 
-	if (event->m_data & NetEvent::DATA_WALK_SPEED)
+	if (event->m_data & NetEvent::DATA_ATTACK_WALK_SPEED)
 	{
 		cv->fromBuffer(getBaseAttrMod()->m_walk_speed);
-	}
-
-	if (event->m_data & NetEvent::DATA_ATTACK_SPEED)
-	{
 		cv->fromBuffer(getBaseAttrMod()->m_attack_speed);
 	}
 
@@ -4319,7 +4317,7 @@ void Creature::processNetEvent(NetEvent* event, CharConv* cv)
 		cv->fromBuffer(getDynAttr()->m_experience);
 	}
 
-	if (event->m_data & NetEvent::DATA_MOVE_INFO)
+	if (event->m_data & NetEvent::DATA_SPEED)
 	{
 		cv->fromBuffer(newspeed.m_x);
 		cv->fromBuffer(newspeed.m_y);
@@ -4327,10 +4325,15 @@ void Creature::processNetEvent(NetEvent* event, CharConv* cv)
 
 	}
 
-	if (event->m_data & NetEvent::DATA_LEVEL)
+	if (event->m_data & NetEvent::DATA_ATTRIBUTES_LEVEL)
 	{
 		cv->fromBuffer(getBaseAttr()->m_level);
 		cv->fromBuffer(getBaseAttr()->m_max_experience);
+		cv->fromBuffer(getBaseAttr()->m_max_health);
+		cv->fromBuffer(getBaseAttr()->m_strength);
+		cv->fromBuffer(getBaseAttr()->m_dexterity);
+		cv->fromBuffer(getBaseAttr()->m_willpower);
+		cv->fromBuffer(getBaseAttr()->m_magic_power);
 	}
 	
 	if (event->m_data & NetEvent::DATA_SPEAK_TEXT)

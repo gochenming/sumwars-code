@@ -11,7 +11,7 @@ DropItem::DropItem()
 	
 	
 	float t = -v0/(2*acc)+sqrt(v0*v0/(4*acc*acc) - 2/acc);
-	m_speed = 4/t;
+	m_drop_speed = 4/t;
 	m_angle_x = 4;
 	
 	m_time =0;
@@ -61,14 +61,14 @@ void DropItem::update(float time)
 		float acc = -20;
 		float v0 =4;
 		m_height =hadd+ 2 + v0*m_time/1000 + acc*m_time*m_time/1000000;
-		m_angle_x -= m_speed*time/1000;
+		m_angle_x -= m_drop_speed*time/1000;
 		
 		if (m_height < hadd)
 		{
 			m_height =hadd;
 			m_angle_x=0;
 		}
-		DEBUG5("speed %f height %f angle %f time %f",m_speed,m_height,m_angle_x,m_time); 
+		DEBUG5("speed %f height %f angle %f time %f",m_drop_speed,m_height,m_angle_x,m_time); 
 	}
 	
 }

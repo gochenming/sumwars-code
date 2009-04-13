@@ -459,7 +459,7 @@ bool World::insertPlayer(WorldObject* player, int slot)
 
 bool World::insertPlayerIntoRegion(WorldObject* player, short region, LocationName loc)
 {
-	DEBUG("try to enter region %i",region); 
+	DEBUG5("try to enter region %i",region); 
 	Region* reg = getRegion(region);
 
 	// Testen ob alle Daten vorhanden sind
