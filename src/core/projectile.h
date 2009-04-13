@@ -7,7 +7,7 @@
 #include "damage.h"
 #include <algorithm>
 #include <math.h>
-#include "netevent.h"
+#include "networkstruct.h"
 #include <list>
 
 class World;
