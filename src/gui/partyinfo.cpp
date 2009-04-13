@@ -276,19 +276,19 @@ void PartyInfo::update()
 		stream << nr;
 		
 		label = win_mgr.getWindow(stream.str());
-		if (pl->getTypeInfo()->m_subtype == "warrior")
+		if (pl->getSubtype() == "warrior")
 		{
 			stream.str(gettext("Warrior"));
 		}
-		else if (pl->getTypeInfo()->m_subtype == "mage")
+		else if (pl->getSubtype() == "mage")
 		{
 			stream.str(gettext("Magician"));
 		}
-		else if (pl->getTypeInfo()->m_subtype == "archer")
+		else if (pl->getSubtype() == "archer")
 		{
 			stream.str( gettext("Archer"));
 		}
-		else if (pl->getTypeInfo()->m_subtype == "priest")
+		else if (pl->getSubtype() == "priest")
 		{
 			stream.str(gettext("Priest"));
 		}

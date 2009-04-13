@@ -503,7 +503,7 @@ int EventSystem::createObject(lua_State *L)
 	{
 
 
-		WorldObject::TypeInfo::ObjectSubtype subtype = lua_tostring(L, 1);
+		WorldObject::Subtype subtype = lua_tostring(L, 1);
 		Vector pos = getVector(L,2);
 
 		if (m_region!=0)
@@ -592,7 +592,7 @@ int EventSystem::addUnitCommand(lua_State *L)
 		WorldObject* wo = m_region->getObject(id);
 		if (wo !=0)
 		{
-			if (wo->getTypeInfo()->m_type != WorldObject::TypeInfo::TYPE_FIXED_OBJECT)
+			if (wo->getType() != "FIXED_OBJECT")
 			{
 				Creature* cr = static_cast<Creature*>(wo);
 
@@ -1475,18 +1475,27 @@ int EventSystem::luagettext(lua_State *L)
 		return 1;
 	}
 
+	DEBUG5("to translate: %s",lua_tostring(L,1));
 	std::string text="return ";
 	std::string transl = dgettext("event",lua_tostring(L,1));
-	size_t pos = transl.find_first_of("\'\"");
-	if (pos == std::string::npos)
-	text += "[[";
+	
+	// testen, ob es zusammengesetzter String ist
+	bool complex = false;
+	
+	if (transl.find("\'..") != std::string::npos || transl.find("\"..") != std::string::npos || transl.find("]]..") != std::string::npos)
+	{
+		complex = true;
+	}
+	
+	if (!complex)
+		text += "[[";
 
 	text += transl;
 
-	if (pos == std::string::npos)
-	text += "]];";
+	if (!complex)
+		text += "]];";
 
-
+	DEBUG5("return string %s",text.c_str());
 	doString(text.c_str());
 	return 1;
 

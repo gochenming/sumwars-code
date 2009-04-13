@@ -569,6 +569,7 @@ bool Region::getObjectsInShape( Shape* shape,  WorldObjectList* result,short lay
 				}
 			}
 		}
+		
 	}
 	return true;
 }
@@ -681,9 +682,10 @@ void Region::getObjectsOnLine(Line& line,  WorldObjectList* result,short layer, 
 
 bool Region::insertObject(WorldObject* object, Vector pos, float angle, bool collision_test)
 {
+	DEBUG5("try to insert %s at %f %f",object->getSubtype().c_str(), pos.m_x,pos.m_y);
 	bool result = true;
 
-	object->getGridLocation()->m_region = m_id;
+	object->setRegionId(m_id);
 
 	 // Einfügen in den Binärbaum
 	if (object->getState() != WorldObject::STATE_STATIC)
@@ -703,7 +705,7 @@ bool Region::insertObject(WorldObject* object, Vector pos, float angle, bool col
 		return result;
 	}
 
-	if (object->getTypeInfo()->m_type == WorldObject::TypeInfo::TYPE_PLAYER)
+	if (object->getType() == "PLAYER")
 	{
 		Player* pl = dynamic_cast<Player*>(object);
 		DEBUG5("player entered Region");
@@ -758,7 +760,7 @@ bool Region::insertObject(WorldObject* object, Vector pos, float angle, bool col
 	 // Testen ob das Objekt in der Region liegt
 	if (x_g<0 || y_g<0 || x_g>=m_dimx || y_g>=m_dimy)
 	{
-		DEBUG("create Object at %f %f",pos.m_x, pos.m_y);
+		DEBUG5("create Object at %f %f",pos.m_x, pos.m_y);
 		return false;
 	}
 	else
@@ -782,7 +784,7 @@ bool Region::insertObject(WorldObject* object, Vector pos, float angle, bool col
 
 	}
 
-	DEBUG5("object inserted %s at %f %f",object->getTypeInfo()->m_subtype.c_str(), object->getShape()->m_center.m_x,object->getShape()->m_center.m_y);
+	DEBUG5("object inserted %s %i at %f %f",object->getSubtype().c_str(), object->getId(), object->getShape()->m_center.m_x,object->getShape()->m_center.m_y);
 	return result;
 }
 
@@ -792,7 +794,7 @@ int Region::createObject(ObjectTemplateType generictype, Vector pos, float angle
 	EnvironmentName env = getEnvironment(pos);
 
 	// genauen Subtyp ermitteln
-	WorldObject::TypeInfo::ObjectSubtype subtype = ObjectFactory::getObjectType(generictype, env);
+	WorldObject::Subtype subtype = ObjectFactory::getObjectType(generictype, env);
 	if (subtype == "")
 	{
 		DEBUG("no subtype found for generictype %s",generictype.c_str());
@@ -802,8 +804,8 @@ int Region::createObject(ObjectTemplateType generictype, Vector pos, float angle
 	bool collision_test=true;
 	
 	// Basistyp ermitteln
-	WorldObject::TypeInfo::ObjectType type = ObjectFactory::getObjectBaseType(subtype);
-	if (type == WorldObject::TypeInfo::TYPE_NONE)
+	WorldObject::Type type = ObjectFactory::getObjectBaseType(subtype);
+	if (type == "NONE")
 	{
 		DEBUG("no base type for subtype %s",subtype.c_str());
 		return 0;
@@ -820,22 +822,22 @@ int Region::createObject(ObjectTemplateType generictype, Vector pos, float angle
 
 	if (state != WorldObject::STATE_NONE)
 	{
-		object->setState(state);
+		object->setState(state,false);
 	}
 	
 	if (state == WorldObject::STATE_AUTO)
 	{
-		if (object->getTypeInfo()->m_type == WorldObject::TypeInfo::TYPE_FIXED_OBJECT)
+		if (object->getType() == "FIXED_OBJECT")
 		{
-			object->setState(WorldObject::STATE_INACTIVE);
+			object->setState(WorldObject::STATE_INACTIVE,false);
 		}
 		else
 		{
-			object->setState(WorldObject::STATE_ACTIVE);
+			object->setState(WorldObject::STATE_ACTIVE,false);
 		}
 	}
 	
-	if (object->getTypeInfo()->m_type == WorldObject::TypeInfo::TYPE_FIXED_OBJECT)
+	if (object->getType() == "FIXED_OBJECT")
 	{
 		collision_test= false;
 	}
@@ -1003,7 +1005,7 @@ bool  Region::deleteObject (WorldObject* object)
 		return false;
 	}
 	
-	if (object->getTypeInfo()->m_type != WorldObject::TypeInfo::TYPE_PLAYER)
+	if (object->getType() != "PLAYER")
 	{
 		NetEvent event;
 		event.m_type = NetEvent::OBJECT_DESTROYED;
@@ -1051,7 +1053,7 @@ bool  Region::deleteObject (WorldObject* object)
 		m_static_objects->erase(object->getId());
 	}
 
-	if (object->getTypeInfo()->m_type == WorldObject::TypeInfo::TYPE_PLAYER)
+	if (object->getType() == "PLAYER")
 	{
 		DEBUG5("Player deleted");
 		m_players->erase(object->getId());
@@ -1191,7 +1193,7 @@ void Region::update(float time)
 			if (World::getWorld()->isServer())
 			{
 				// nur Nichtspieler Objekte loeschen
-				if (object->getTypeInfo()->m_type != WorldObject::TypeInfo::TYPE_PLAYER)
+				if (object->getType() != "PLAYER")
 				{
 					DEBUG5("Objekt gelöscht: %i \n",object->getId());
 					
@@ -1273,7 +1275,7 @@ void Region::update(float time)
 			object = iter->second;
 
 			// NetEvents durch Spieler werden global behandelt, daher hier nicht beruecksichtigen
-			if (object->getTypeInfo()->m_type == WorldObject::TypeInfo::TYPE_PLAYER)
+			if (object->getType() == "PLAYER")
 			{
 				continue;
 			}
@@ -1504,7 +1506,7 @@ void Region::getRegionData(CharConv* cv)
 	}
 
 	// Anzahl der statischen Objekte eintragen
-	DEBUG5("static objects: %i",m_static_objects->size());
+	DEBUG("static objects: %i",m_static_objects->size());
 	cv->toBuffer<short>((short) m_static_objects->size());
 
 	// statische Objekte in den Puffer eintragen
@@ -1512,7 +1514,7 @@ void Region::getRegionData(CharConv* cv)
 	for (it = m_static_objects->begin();it!=m_static_objects->end();++it)
 	{
 		(it->second)->toString(cv);
-		DEBUG5("static object: %s",(it->second)->getNameId().c_str());
+		DEBUG("static object: %s",(it->second)->getNameId().c_str());
 	}
 
 
@@ -1583,8 +1585,8 @@ void Region::getRegionData(CharConv* cv)
 
 void Region::createObjectFromString(CharConv* cv, WorldObjectMap* players)
 {
-	char type;
-	std::string subt;
+	WorldObject::Type type;
+	WorldObject::Subtype subt;
 	int id;
 
 	WorldObject* obj;
@@ -1599,9 +1601,9 @@ void Region::createObjectFromString(CharConv* cv, WorldObjectMap* players)
 
 		// alle Objekte ausser den Spielern werden neu angelegt
 		// die Spieler existieren schon
-	if (type != WorldObject::TypeInfo::TYPE_PLAYER)
+	if (type != "PLAYER")
 	{
-		obj = ObjectFactory::createObject((WorldObject::TypeInfo::ObjectType) type, subt,id);
+		obj = ObjectFactory::createObject(type, subt,id);
 	}
 	else
 	{
@@ -1711,7 +1713,7 @@ void Region::setRegionData(CharConv* cv,WorldObjectMap* players)
 	WorldObjectMap::iterator jt;
 	for (jt = m_objects->begin();jt!=m_objects->end();jt++)
 	{
-		if (jt->second->getTypeInfo()->m_type != WorldObject::TypeInfo::TYPE_PLAYER)
+		if (jt->second->getType() != "PLAYER")
 		{
 			jt->second->destroy();
 			deleteObject(jt->second);
@@ -1724,7 +1726,7 @@ void Region::setRegionData(CharConv* cv,WorldObjectMap* players)
 	// statische Objekte einlesen
 	short nr_stat;
 	cv->fromBuffer<short>(nr_stat);
-	DEBUG5("static objects: %i",nr_stat);
+	DEBUG("static objects: %i",nr_stat);
 
 	for (int i=0; i<nr_stat;i++)
 	{
