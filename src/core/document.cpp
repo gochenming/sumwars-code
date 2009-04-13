@@ -244,7 +244,7 @@ void Document::onCreateNewCharButton()
 	
 }
 
-void Document::setNewCharacter(WorldObject::TypeInfo::ObjectSubtype subtype, PlayerLook look)
+void Document::setNewCharacter(WorldObject::Subtype subtype, PlayerLook look)
 {	
 	if (m_temp_player)
 		delete m_temp_player;

@@ -167,7 +167,7 @@ void World::createRegion(short region)
 {
 
 
-	DEBUG5("creating region %i",region);
+	DEBUG("creating region %i",region);
 	int type = 1;
 	if (type==1)
 	{
@@ -232,60 +232,6 @@ void World::createRegion(short region)
 		reg->createObject( "tree3", Vector(1,2));
 
 		reg->createObject("$tree", Vector(1,8));
-
-
-		/*
-		WorldObject* wo=0;
-		wo = new Spawnpoint("goblins", World::getWorld()->getValidId());
-		reg->insertObject(wo, Vector(15,10));
-
-
-		wo = ObjectFactory::createObject(WorldObject::TypeInfo::TYPE_MONSTER, "goblin");
-		reg->insertObject(wo, Vector(13,8));
-
-
-
-
-		wo = ObjectFactory::createObject(WorldObject::TypeInfo::TYPE_MONSTER, "gob_dog");
-		reg->insertObject(wo, Vector(14.2,8.2));
-
-		wo = ObjectFactory::createObject(WorldObject::TypeInfo::TYPE_MONSTER, "goblin");
-		reg->insertObject(wo, Vector(14.5,6.7));
-
-		wo = ObjectFactory::createObject(WorldObject::TypeInfo::TYPE_MONSTER, "goblin");
-		reg->insertObject(wo, Vector(14.8,5.7));
-
-		wo = ObjectFactory::createObject(WorldObject::TypeInfo::TYPE_MONSTER, "goblin");
-		reg->insertObject(wo, Vector(14,10.9));
-
-		wo = ObjectFactory::createObject(WorldObject::TypeInfo::TYPE_MONSTER, "goblin");
-		reg->insertObject(wo, Vector(17,8.2));
-
-
-
-		wo = ObjectFactory::createObject(WorldObject::TypeInfo::TYPE_MONSTER, "goblin");
-		reg->insertObject(wo, Vector(18.5,7));
-
-		wo = ObjectFactory::createObject(WorldObject::TypeInfo::TYPE_MONSTER, "goblin");
-		reg->insertObject(wo, Vector(17.2,6.6));
-
-		wo = ObjectFactory::createObject(WorldObject::TypeInfo::TYPE_MONSTER, "goblin");
-		reg->insertObject(wo, Vector(19.9,6.9));
-		*/
-
-/*
-		wo = ObjectFactory::createObject(WorldObject::TypeInfo::TYPE_MONSTER, "goblin");
-		insertObject(wo, Vector(16.2,3),rid);
-
-		wo = ObjectFactory::createObject(WorldObject::TypeInfo::TYPE_MONSTER, "goblin");
-		insertObject(wo, Vector(19.2,3.1),rid);
-
-		wo = ObjectFactory::createObject(WorldObject::TypeInfo::TYPE_MONSTER, "goblin");
-		insertObject(wo, Vector(6.5,6.4),rid);
-
-		wo = ObjectFactory::createObject(WorldObject::TypeInfo::TYPE_MONSTER, "goblin");
-		insertObject(wo, Vector(8.5,6.4),rid);
-		*/
 
 	}
 }
@@ -513,7 +459,7 @@ bool World::insertPlayer(WorldObject* player, int slot)
 
 bool World::insertPlayerIntoRegion(WorldObject* player, short region, LocationName loc)
 {
-	DEBUG5("try to enter region %i",region); 
+	DEBUG("try to enter region %i",region); 
 	Region* reg = getRegion(region);
 
 	// Testen ob alle Daten vorhanden sind
@@ -523,11 +469,11 @@ bool World::insertPlayerIntoRegion(WorldObject* player, short region, LocationNa
 		data_missing =1;
 	}
 
-	if (player->getGridLocation()->m_region != region)
+	if (player->getRegionId() != region)
 	{
-		DEBUG5("changing region %i %i",player->getGridLocation()->m_region,region);
-		player->getGridLocation()->m_region = region;
-		player->setState(WorldObject::STATE_INACTIVE);
+		DEBUG5("changing region %i %i",player->getRegionId(),region);
+		player->setRegionId(region);
+		player->setState(WorldObject::STATE_INACTIVE,false);
 	}
 	
 	if (player->getState() != WorldObject::STATE_ENTER_REGION)
@@ -563,7 +509,7 @@ bool World::insertPlayerIntoRegion(WorldObject* player, short region, LocationNa
 			if (player == m_local_player)
 			{
 				// Spieler in die Region einfuegen
-				player->setState(WorldObject::STATE_ENTER_REGION);
+				player->setState(WorldObject::STATE_ENTER_REGION,false);
 				DEBUG5("player can enter region");
 			}
 			else
@@ -588,7 +534,7 @@ bool World::insertPlayerIntoRegion(WorldObject* player, short region, LocationNa
 
 				}
 				// Auf Datenanfrage seitens des Client warten
-				player->setState(WorldObject::STATE_REGION_DATA_WAITING);
+				player->setState(WorldObject::STATE_REGION_DATA_WAITING,false);
 				DEBUG("waiting for a client data request");
 			}
 
@@ -608,12 +554,12 @@ bool World::insertPlayerIntoRegion(WorldObject* player, short region, LocationNa
 				if (data_missing != 0)
 				{
 					// Region unbekannt, ignorieren
-					player->setState(WorldObject::STATE_INACTIVE);
+					player->setState(WorldObject::STATE_INACTIVE,false);
 				}
 				else
 				{
 					// Spieler in die Region einfuegen
-					player->setState(WorldObject::STATE_ENTER_REGION);
+					player->setState(WorldObject::STATE_ENTER_REGION,false);
 				}
 			}
 
@@ -652,7 +598,7 @@ bool World::insertPlayerIntoRegion(WorldObject* player, short region, LocationNa
 		reg->insertObject(player, pos,player->getShape()->m_angle);
 		DEBUG5("entry position %f %f",pos.m_x, pos.m_y);
 
-		player->setState(WorldObject::STATE_ACTIVE);
+		player->setState(WorldObject::STATE_ACTIVE,false);
 
 		// bisheriges Kommando abbrechen
 		static_cast<Creature*>(player)->clearCommand(false);
@@ -680,7 +626,7 @@ void World::handleSavegame(CharConv *cv, int slot)
 	DEBUG5("got savegame from slot %i",slot);
 	
 	Player* pl =0;
-	pl= new Player(getValidId(),"");
+	pl= new Player;
 	pl->fromSavegame(cv, (slot == LOCAL_SLOT) );
 	
 	// Spieler ist lokal
@@ -710,10 +656,10 @@ void World::handleSavegame(CharConv *cv, int slot)
 		insertPlayer(pl,slot);
 		// Daten aus dem Savegame laden
 
-		pl->setState(WorldObject::STATE_ACTIVE);
+		pl->setState(WorldObject::STATE_ACTIVE,false);
 
 		// Debugging: Region, Koordinaten setzen
-		pl->getGridLocation()->m_region =0;
+		pl->setRegionId(0);
 		pl->getShape()->m_center = Vector(9,10);
 
 		RegionLocation regloc = pl->getRevivePosition();
@@ -1122,6 +1068,7 @@ void World::updatePlayers()
 	WorldObjectMap::iterator it;
 	Player* pl;
 	int slot = LOCAL_SLOT;
+	if (m_local_player !=0)
 	for (it = m_player_slots->begin(); it != m_player_slots->end(); )
 	{
 		slot = it->first;
@@ -1169,7 +1116,7 @@ void World::updatePlayers()
 		{
 			DEBUG("send data request to server");
 			// Client wartet auf Daten zur Region
-			pl->setState(WorldObject::STATE_REGION_DATA_WAITING);
+			pl->setState(WorldObject::STATE_REGION_DATA_WAITING,false);
 
 			// fehlende Daten zur Region anfordern
 			PackageHeader header;
@@ -1178,7 +1125,7 @@ void World::updatePlayers()
 
 			ClientDataRequest datareq;
 			datareq.m_data = ClientDataRequest::REGION_ALL;
-			datareq.m_id = pl->getGridLocation()->m_region;
+			datareq.m_id = pl->getRegionId();
 
 			CharConv msg;
 			header.toString(&msg);
@@ -1194,7 +1141,7 @@ void World::updatePlayers()
 			if (pl->getState() == WorldObject::STATE_ENTER_REGION && pl->getRegion() !=0 )
 			{
 				// TODO: Ort angeben
-				insertPlayerIntoRegion(pl,pl->getGridLocation()->m_region, "entry_south");
+				insertPlayerIntoRegion(pl,pl->getRegionId(), "entry_south");
 			}
 		}
 
@@ -1307,11 +1254,11 @@ void World::updatePlayers()
 					{
 						// Daten zu Spielern erhalten
 						// Typ Spieler (schon bekannt)
-						char tmp;
+						GameObject::Type tmp;
 						cv->fromBuffer(tmp);
 
 						// Subtyp
-						std::string subt;
+						GameObject::Subtype subt;
 						cv->fromBuffer(subt);
 
 						int id;
@@ -1324,7 +1271,7 @@ void World::updatePlayers()
 						if (m_players->count(id)==0)
 						{
 							// Spieler existiert noch nicht
-							player = ObjectFactory::createObject(WorldObject::TypeInfo::TYPE_PLAYER, subt,id);
+							player = ObjectFactory::createObject("PLAYER", subt,id);
 							insertPlayer(player);
 						}
 						else
@@ -1364,7 +1311,7 @@ void World::updatePlayers()
 					reg->setRegionData(cv,m_players);
 
 					// lokalen Spieler fuer die Region freischalten
-					m_local_player->setState(WorldObject::STATE_ENTER_REGION);
+					m_local_player->setState(WorldObject::STATE_ENTER_REGION,false);
 
 					// Region einfuegen
 					if (getRegion(headerp.m_number) ==0)
@@ -1425,8 +1372,10 @@ void World::updatePlayers()
 					{
 						m_local_player->getRegion()->deleteObject(m_local_player);
 					}
-					m_local_player->setState(WorldObject::STATE_REGION_DATA_REQUEST);
-					m_local_player->getGridLocation()->m_region = headerp.m_number;
+					m_local_player->setState(WorldObject::STATE_REGION_DATA_REQUEST,false);
+					m_local_player->setRegionId(headerp.m_number);
+					DEBUG("state %i",m_local_player->getState());
+	
 				}
 
 				if (headerp.m_content == PTYPE_S2C_EVENT)
@@ -1573,7 +1522,7 @@ bool World::writeNetEvent(Region* region,NetEvent* event, CharConv* cv)
 		{
 			
 			object =region->getObject(event->m_id);
-			DEBUG5("object created %s %i",object->getTypeInfo()->m_subtype.c_str(), object->getId());
+			DEBUG5("object created %s %i",object->getSubtype().c_str(), object->getId());
 			object->toString(cv);
 		}
 
@@ -1967,7 +1916,7 @@ bool World::processNetEvent(Region* region,CharConv* cv)
 				{
 					object->getRegion()->deleteObject(object);
 				}
-				object->getGridLocation()->m_region = event.m_data;
+				object->setRegionId( event.m_data);
 
 				cv->fromBuffer(object->getShape()->m_center.m_x);
 				cv->fromBuffer(object->getShape()->m_center.m_y);
@@ -2190,7 +2139,7 @@ void World::handleDataRequest(ClientDataRequest* request, int slot )
 
 			m_network->pushSlotMessage(msg.getBitStream(),slot);
 
-			player->setState(WorldObject::STATE_ENTER_REGION);
+			player->setState(WorldObject::STATE_ENTER_REGION,false);
 
 		}
 
@@ -2273,7 +2222,7 @@ bool World::calcBlockmat(PathfindInfo * pathinfo)
 
 			// Wertigkeit des Hindernisses bestimmen
 			char val = 9;
-			if (wo->getTypeInfo()->m_type == WorldObject::TypeInfo::TYPE_MONSTER || wo->getTypeInfo()->m_type == WorldObject::TypeInfo::TYPE_PLAYER)
+			if (wo->getType()== "MONSTER" || wo->getType() == "PLAYER")
 			{
 				if (wo->getSpeed().getLength() == 0)
 				{

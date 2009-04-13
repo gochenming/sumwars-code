@@ -90,7 +90,7 @@ bool Creature::init()
 	m_equipement =0;
 
 	// Bewegung auf 0 setzen
-	m_speed = Vector(0,0);
+	setSpeed(Vector(0,0));
 
 	// Wegfindeinformationen auf 0 setzen
 	m_small_path_info=0;
@@ -123,7 +123,7 @@ bool Creature::init()
 		m_dyn_attr.m_effect_time[i]=0;
 	}
 
-	setState(STATE_ACTIVE);
+	setState(STATE_ACTIVE,false);
 	m_script_command_timer =0;
 	clearCommand(true);
 	
@@ -136,7 +136,7 @@ bool Creature::init()
 	getBaseAttrMod()->m_max_health = getBaseAttr()->m_max_health;
 	getBaseAttrMod()->m_power =1;
 	
-	m_event_mask =0;
+	clearNetEventMask();
 	
 	m_refname = "";
 	getTradeInfo().m_trade_partner =0;
@@ -165,7 +165,7 @@ void Creature::die()
 	m_action.m_time =1000;
 	m_action.m_elapsed_time =0;
 
-	m_event_mask |= NetEvent::DATA_ACTION | NetEvent::DATA_STATE;
+	addToNetEventMask(NetEvent::DATA_ACTION);
 	
 	Trigger* tr = new Trigger("unit_die");
 	tr->addVariable("unit",getId());
@@ -218,7 +218,7 @@ void Creature::initAction()
 			// Timer ist frei, Timer starten
 			m_timer1 = time;
 			m_timer1_max = time;
-			m_event_mask |= NetEvent::DATA_TIMER;
+			addToNetEventMask(NetEvent::DATA_TIMER);
 		}
 		else
 		{
@@ -235,7 +235,7 @@ void Creature::initAction()
 			// Timer ist frei, Timer starten
 			m_timer2 = time;
 			m_timer2_max = time;
-			m_event_mask |= NetEvent::DATA_TIMER;
+			addToNetEventMask( NetEvent::DATA_TIMER);
 		}
 		else
 		{
@@ -267,16 +267,18 @@ void Creature::initAction()
 	{
 			// Bei Aktion laufen die Laufgeschwindigkeit einrechnen
 			m_action.m_time = 1000000 / getBaseAttrMod()->m_walk_speed;
-			m_speed *= getBaseAttr()->m_step_length/m_action.m_time;
-			m_event_mask |= NetEvent::DATA_MOVE_INFO;
+			Vector speed = getSpeed();
+			speed *= getBaseAttr()->m_step_length/m_action.m_time;
+			setSpeed(speed);
+			
 			//collisionDetection(m_action.m_time);
 
 			DEBUG5("walk time %f walk speed %i",m_action.m_time,getBaseAttrMod()->m_walk_speed);
-			DEBUG5("pos %f %f speed %f %f",getShape()->m_center.m_x, getShape()->m_center.m_y, m_speed.m_x,m_speed.m_y);
+			DEBUG5("pos %f %f speed %f %f",getShape()->m_center.m_x, getShape()->m_center.m_y, getSpeed().m_x,getSpeed().m_y);
 	}
 	else
 	{
-		m_speed = Vector(0,0);
+		setSpeed(Vector(0,0));
 	}
 
 
@@ -301,12 +303,12 @@ void Creature::initAction()
 	if (aci->m_distance != Action::SELF && m_action.m_type != Action::TAKE_ITEM)
 	{
 		
-		getShape()->m_angle = (m_action.m_goal - getShape()->m_center).angle();
+		setAngle((m_action.m_goal - getShape()->m_center).angle());
 
 	}
 	if (baseact == Action::WALK)
 	{
-		getShape()->m_angle = m_speed.angle();
+		setAngle(getShape()->m_angle = getSpeed().angle());
 	}
 
 	// Daten fuer die Animation setzen
@@ -319,7 +321,7 @@ void Creature::initAction()
 	{
 	}
 
-	m_event_mask |= NetEvent::DATA_ACTION;
+	addToNetEventMask(NetEvent::DATA_ACTION);
 	
 	if (m_action.m_time ==0)
 	{
@@ -398,7 +400,7 @@ void Creature::performAction(float &time)
 		collisionDetection(dtime);
 
 		// neue Koordinaten ausrechnen
-		Vector newpos = getShape()->m_center + m_speed*dtime;
+		Vector newpos = getShape()->m_center + getSpeed()*dtime;
 
 		// Bewegung ausfuehren
 		moveTo(newpos);
@@ -415,7 +417,7 @@ void Creature::performAction(float &time)
 	
 	if (m_action.m_type != Action::NOACTION)
 	{
-		DEBUG5("pos %f %f  speed %f %f  pct %f",getShape()->m_center.m_x, getShape()->m_center.m_y, m_speed.m_x,m_speed.m_y,p1);
+		DEBUG5("pos %f %f  speed %f %f  pct %f",getShape()->m_center.m_x, getShape()->m_center.m_y, getSpeed().m_x,getSpeed().m_y,p1);
 	}
 	
 	// Triple Shot
@@ -524,7 +526,7 @@ void Creature::performAction(float &time)
 		// Wenn ein Zielobjekt existiert
 		if (goalobj !=0)
 		{
-			if (goalobj->getTypeInfo()->m_type == TypeInfo::TYPE_FIXED_OBJECT)
+			if (goalobj->getType()== "FIXED_OBJECT")
 			{
 				cgoal =0;
 				// Ziel existiert nicht mehr, evtl abbrechen
@@ -561,7 +563,7 @@ void Creature::performAction(float &time)
 			tr->addVariable("unit",getId());
 			getRegion()->insertTrigger(tr);
 			
-			if (getTypeInfo()->m_type == TypeInfo::TYPE_PLAYER)
+			if (getType() == "PLAYER")
 			{
 				Trigger* tr = new Trigger("player_moved");
 				tr->addVariable("player",getId());
@@ -579,7 +581,7 @@ void Creature::performAction(float &time)
 			DEBUG5("finished command %i (base %i) with action %i",m_command.m_type,baseact,m_action.m_type );
 			if (m_command.m_type != Action::NOACTION)
 			{
-				m_event_mask |= NetEvent::DATA_COMMAND;
+				addToNetEventMask(NetEvent::DATA_COMMAND);
 				clearCommand(true);
 			}
 			m_command.m_type = Action::NOACTION;
@@ -594,11 +596,11 @@ void Creature::performAction(float &time)
 		// Aktion ist beendet
 		if (m_action.m_type != Action::NOACTION)
 		{
-			m_event_mask |= NetEvent::DATA_ACTION;
+			addToNetEventMask(NetEvent::DATA_ACTION);
 		}
 		m_action.m_type = Action::NOACTION;
 		m_action.m_elapsed_time =0;
-		m_event_mask |= NetEvent::DATA_ACTION;
+		addToNetEventMask(NetEvent::DATA_ACTION);
 	}
 
 
@@ -611,7 +613,7 @@ void Creature::performActionCritPart(Vector goal, WorldObject* goalobj)
 	// Zielobjekt als Creature* pointer
 	// null, wenn das Objekt kein Lebewesen ist
 	Creature* cgoal =0;
-	if (goalobj!=0 && goalobj->getTypeInfo()->m_type == TypeInfo::TYPE_FIXED_OBJECT)
+	if (goalobj!=0 && goalobj->getType() == "FIXED_OBJECT")
 	{
 		cgoal =0;
 	}
@@ -717,7 +719,7 @@ void Creature::performActionCritPart(Vector goal, WorldObject* goalobj)
 			// an alle einfachen Schaden austeilen
 			for (it=res.begin();it!=res.end();++it)
 			{
-				if ((*it)->getTypeInfo()->m_type != TypeInfo::TYPE_FIXED_OBJECT)
+				if ((*it)->getType() != "FIXED_OBJECT")
 				{
 					cr = (Creature*) (*it);
 					cr->takeDamage(&m_damage);
@@ -736,7 +738,7 @@ void Creature::performActionCritPart(Vector goal, WorldObject* goalobj)
 			// an alle Schaden austeilen
 			for (it=res.begin();it!=res.end();++it)
 			{
-				if ((*it)->getTypeInfo()->m_type != TypeInfo::TYPE_FIXED_OBJECT)
+				if ((*it)->getType() != "FIXED_OBJECT")
 				{
 					cr = (Creature*) (*it);
 					cr->takeDamage(&m_damage);
@@ -755,7 +757,7 @@ void Creature::performActionCritPart(Vector goal, WorldObject* goalobj)
 			// an alle Schaden austeilen
 			for (it=res.begin();it!=res.end();++it)
 			{
-				if ((*it)->getTypeInfo()->m_type != TypeInfo::TYPE_FIXED_OBJECT)
+				if ((*it)->getType() != "FIXED_OBJECT")
 				{
 					cr = (Creature*) (*it);
 					cr->takeDamage(&m_damage);
@@ -783,7 +785,7 @@ void Creature::performActionCritPart(Vector goal, WorldObject* goalobj)
 			// an alle Schaden austeilen
 			for (it=res.begin();it!=res.end();++it)
 			{
-				if ((*it)->getTypeInfo()->m_type != TypeInfo::TYPE_FIXED_OBJECT && World::getWorld()->getRelation(getFraction(),(*it)->getFraction()) ==  HOSTILE)
+				if ((*it)->getType() != "FIXED_OBJECT" && World::getWorld()->getRelation(getFraction(),(*it)->getFraction()) ==  HOSTILE)
 				{
 					cr = (Creature*) (*it);
 					cbam.m_dwalk_speed = -cr->getBaseAttrMod()->m_walk_speed/2;
@@ -825,7 +827,7 @@ void Creature::performActionCritPart(Vector goal, WorldObject* goalobj)
 		case Action::REGENERATE:
 			// 50% der Lebenspunkte wieder auffuellen
 			m_dyn_attr.m_health = std::min(m_dyn_attr.m_health+0.5f*m_base_attr_mod.m_max_health,m_base_attr_mod.m_max_health);
-			m_event_mask |= NetEvent::DATA_HP;
+			addToNetEventMask(NetEvent::DATA_HP);
 			break;
 
 		case Action::ANGER:
@@ -836,7 +838,7 @@ void Creature::performActionCritPart(Vector goal, WorldObject* goalobj)
 			cbam.m_darmor = -m_base_attr_mod.m_armor /2;
 			applyBaseAttrMod(&cbam);
 			m_dyn_attr.m_status_mod_time[Damage::BERSERK] = 30000;
-			m_event_mask |= NetEvent::DATA_STATUS_MODS;
+			addToNetEventMask(NetEvent::DATA_STATUS_MODS);
 			break;
 
 		case Action::FURY:
@@ -849,7 +851,7 @@ void Creature::performActionCritPart(Vector goal, WorldObject* goalobj)
 			cbam.m_dattack_speed = 1000;
 			applyBaseAttrMod(&cbam);
 			m_dyn_attr.m_status_mod_time[Damage::BERSERK] = 30000;
-			m_event_mask |= NetEvent::DATA_STATUS_MODS;
+			addToNetEventMask(NetEvent::DATA_STATUS_MODS);
 			break;
 
 		// Magierfaehigkeiten
@@ -1140,7 +1142,7 @@ void Creature::performActionCritPart(Vector goal, WorldObject* goalobj)
 			{
 				if (World::getWorld()->getRelation(fr,(*it)) == WorldObject::ALLIED)
 				{
-					if ((*it)->getTypeInfo()->m_type != TypeInfo::TYPE_FIXED_OBJECT)
+					if ((*it)->getType() != "FIXED_OBJECT")
 					{
 						cgoal = (Creature*) (*it);
 						cgoal->applyBaseAttrMod(&cbam);
@@ -1177,7 +1179,7 @@ void Creature::performActionCritPart(Vector goal, WorldObject* goalobj)
 			{
 				if (World::getWorld()->getRelation(fr,(*it)) == WorldObject::ALLIED)
 				{
-					if ((*it)->getTypeInfo()->m_type != TypeInfo::TYPE_FIXED_OBJECT)
+					if ((*it)->getType() != "FIXED_OBJECT")
 					{
 						cgoal = (Creature*) (*it);
 						cgoal->applyBaseAttrMod(&cbam);
@@ -1200,7 +1202,7 @@ void Creature::performActionCritPart(Vector goal, WorldObject* goalobj)
 			{
 				if (World::getWorld()->getRelation(fr,(*it)) == WorldObject::ALLIED)
 				{
-					if ((*it)->getTypeInfo()->m_type != TypeInfo::TYPE_FIXED_OBJECT)
+					if ((*it)->getType() != "FIXED_OBJECT")
 					{
 						cgoal = (Creature*) (*it);
 						cgoal->applyDynAttrMod(&cdam);
@@ -1222,7 +1224,7 @@ void Creature::performActionCritPart(Vector goal, WorldObject* goalobj)
 			getRegion()->getObjectsInShape(&s, &res,LAYER_AIR,CREATURE,this);
 			for (it=res.begin();it!=res.end();++it)
 			{
-				if ((*it)->getTypeInfo()->m_type != TypeInfo::TYPE_FIXED_OBJECT)
+				if ((*it)->getType() != "FIXED_OBJECT")
 				{
 					// Projektil Lichtstrahl fuer jedes Objekt erzeugen
 					goal = (*it)->getShape()->m_center;
@@ -1253,7 +1255,7 @@ void Creature::performActionCritPart(Vector goal, WorldObject* goalobj)
 			{
 				if (World::getWorld()->getRelation(fr,(*it)) == WorldObject::ALLIED)
 				{
-					if ((*it)->getTypeInfo()->m_type != TypeInfo::TYPE_FIXED_OBJECT)
+					if ((*it)->getType() != "FIXED_OBJECT")
 					{
 						cgoal = (Creature*) (*it);
 						cgoal->applyBaseAttrMod(&cbam);
@@ -1290,7 +1292,7 @@ void Creature::performActionCritPart(Vector goal, WorldObject* goalobj)
 			{
 				if (World::getWorld()->getRelation(fr,(*it)) == WorldObject::ALLIED)
 				{
-					if ((*it)->getTypeInfo()->m_type != TypeInfo::TYPE_FIXED_OBJECT)
+					if ((*it)->getType() != "FIXED_OBJECT")
 					{
 						cgoal = (Creature*) (*it);
 						cgoal->applyDynAttrMod(&cdam);
@@ -1331,7 +1333,7 @@ void Creature::performActionCritPart(Vector goal, WorldObject* goalobj)
 			{
 				if (World::getWorld()->getRelation(fr,(*it)) == WorldObject::ALLIED)
 				{
-					if ((*it)->getTypeInfo()->m_type != TypeInfo::TYPE_FIXED_OBJECT)
+					if ((*it)->getType() != "FIXED_OBJECT")
 					{
 						cgoal = (Creature*) (*it);
 						cgoal->applyDynAttrMod(&cdam);
@@ -1355,7 +1357,7 @@ void Creature::performActionCritPart(Vector goal, WorldObject* goalobj)
 			for (it=res.begin();it!=res.end();++it)
 			{
 				// fuer alle Lebewesen ein Projektil heiliger Strahl erzeugen
-				if ((*it)->getTypeInfo()->m_type != TypeInfo::TYPE_FIXED_OBJECT)
+				if ((*it)->getType() != "FIXED_OBJECT")
 				{
 					goal = (*it)->getShape()->m_center;
 					pr = new Projectile(Projectile::DIVINE_BEAM,&m_damage, World::getWorld()->getValidProjectileId());
@@ -1378,7 +1380,7 @@ void Creature::performActionCritPart(Vector goal, WorldObject* goalobj)
 			{
 				if (World::getWorld()->getRelation(fr,(*it)) == WorldObject::ALLIED)
 				{
-					if ((*it)->getTypeInfo()->m_type != TypeInfo::TYPE_FIXED_OBJECT)
+					if ((*it)->getType() != "FIXED_OBJECT")
 					{
 						cgoal = (Creature*) (*it);
 						cgoal->applyBaseAttrMod(&cbam);
@@ -1415,7 +1417,7 @@ void Creature::performActionCritPart(Vector goal, WorldObject* goalobj)
 			{
 				if (World::getWorld()->getRelation(fr,(*it)) == WorldObject::ALLIED)
 				{
-					if ((*it)->getTypeInfo()->m_type != TypeInfo::TYPE_FIXED_OBJECT)
+					if ((*it)->getType() != "FIXED_OBJECT")
 					{
 						cgoal = (Creature*) (*it);
 						cgoal->applyDynAttrMod(&cdam);
@@ -1438,7 +1440,7 @@ void Creature::performActionCritPart(Vector goal, WorldObject* goalobj)
 			for (it=res.begin();it!=res.end();++it)
 			{
 				// Fuer alle Lebewesen ein Projektil Hypnose erzeugen
-				if ((*it)->getTypeInfo()->m_type != TypeInfo::TYPE_FIXED_OBJECT)
+				if ((*it)->getType() != "FIXED_OBJECT")
 				{
 					goal = (*it)->getShape()->m_center;
 					pr = new Projectile(Projectile::HYPNOSIS,&m_damage, World::getWorld()->getValidProjectileId());
@@ -1461,7 +1463,7 @@ void Creature::performActionCritPart(Vector goal, WorldObject* goalobj)
 			{
 				if (World::getWorld()->getRelation(fr,(*it)) == WorldObject::ALLIED)
 				{
-					if ((*it)->getTypeInfo()->m_type != TypeInfo::TYPE_FIXED_OBJECT)
+					if ((*it)->getType() != "FIXED_OBJECT")
 					{
 						cgoal = (Creature*) (*it);
 						cgoal->applyBaseAttrMod(&cbam);
@@ -1498,7 +1500,7 @@ void Creature::collisionDetection(float time)
 {
 	WorldObjectList result;
 	// Punkt zu dem das Objekt bewegt werden soll
-	Vector newpos = getShape()->m_center + m_speed*time;
+	Vector newpos = getShape()->m_center + getSpeed()*time;
 
 	// Kreis um den Zielpunkt
 	Shape scopy;
@@ -1507,7 +1509,7 @@ void Creature::collisionDetection(float time)
 	scopy.m_type = Shape::CIRCLE;
 
 	// Ebene in der gesucht werden soll
-	short layer = m_layer;
+	short layer = getLayer();
 
 	// Alle kollidierenden Objekte suchen
 	getRegion()->getObjectsInShape(&(scopy),&result,layer, CREATURE | FIXED,this);
@@ -1527,8 +1529,7 @@ void Creature::collisionDetection(float time)
 			// wenn mit dem Zielobjekt kollidiert Bewegung beenden
 			if ((*i)->getId() == getCommand()->m_goal_object_id)
 			{
-				m_speed = Vector(0,0);
-				m_event_mask |= NetEvent::DATA_MOVE_INFO;
+				setSpeed(Vector(0,0));
 				break;
 			}
 
@@ -1538,8 +1539,7 @@ void Creature::collisionDetection(float time)
 				DEBUG5("charge goal object %i",(*i)->getId());
 				// Behandlung von *Charge*
 				m_command.m_goal_object_id = (*i)->getId();
-				m_speed = Vector(0,0);
-				m_event_mask |= NetEvent::DATA_MOVE_INFO;
+				setSpeed(Vector(0,0));
 				return;
 			}
 			else
@@ -1551,7 +1551,7 @@ void Creature::collisionDetection(float time)
 		}
 
 		// neuen erreichten Punkt ausrechnen und testen ob dieser akzeptabel ist
-		newpos = getShape()->m_center + m_speed*time;
+		newpos = getShape()->m_center + getSpeed()*time;
 		
 
 		// Kreis um den neuen Zielpunkt
@@ -1568,8 +1568,7 @@ void Creature::collisionDetection(float time)
 		{
 			DEBUG5("still colliding");
 
-			m_speed = Vector(0,0);
-			m_event_mask |= NetEvent::DATA_MOVE_INFO;
+			setSpeed(Vector(0,0));
 		}
 
 	}
@@ -1585,7 +1584,7 @@ void Creature::handleCollision(Shape* s2)
 	
 	bool circ = true;
 
-	DEBUG5("old speed %f %f", m_speed.m_x, m_speed.m_y);
+	DEBUG5("old speed %f %f", getSpeed().m_x, getSpeed().m_y);
 	if (s2->m_type==Shape::RECT)
 	{
 		// Kollision mit Rechteckt
@@ -1594,7 +1593,7 @@ void Creature::handleCollision(Shape* s2)
 		Vector locpos = pos - cpos;
 		locpos.rotate(-s2->m_angle);
 		
-		Vector locspeed = m_speed;
+		Vector locspeed = getSpeed();
 		locspeed.rotate(-s2->m_angle);
 		
 		circ = false;
@@ -1658,7 +1657,7 @@ void Creature::handleCollision(Shape* s2)
 		{
 			DEBUG5("locspeed %f %f",locspeed.m_x, locspeed.m_y);
 			locspeed.rotate(s2->m_angle);
-			m_speed = locspeed;
+			setSpeed(locspeed);
 			
 		}
 	
@@ -1678,19 +1677,18 @@ void Creature::handleCollision(Shape* s2)
 		
 		
 		// vom Geschwindigkeitsvektor nur den zu dieser Richtung senkrechten Teil uebrig lassen
-		m_speed.normalPartTo(dir);
-
+		Vector speed = getSpeed();
+		speed.normalPartTo(dir);
+		setSpeed(speed);
 	}
 
 	// neue Geschwindigkeit normieren
-	m_speed.normalize();
-	DEBUG5("new speed %f %f", m_speed.m_x, m_speed.m_y);
-	m_speed *= getBaseAttr()->m_step_length/m_action.m_time;
+	Vector speed = getSpeed();
+	speed.normalize();
+	DEBUG5("new speed %f %f", getSpeed().m_x, getSpeed().m_y);
+	speed *= getBaseAttr()->m_step_length/m_action.m_time;
+	setSpeed(speed);
 	
-	
-	
-	m_event_mask |= NetEvent::DATA_MOVE_INFO;
-
 }
 
 bool Creature::hasScriptCommand()
@@ -1736,10 +1734,10 @@ void Creature::updateCommand()
 			// Naechstes Kommando auf nichts setzen
 			m_next_command.m_type = Action::NOACTION;
 			
-			m_event_mask |= NetEvent::DATA_NEXT_COMMAND;
+			addToNetEventMask(NetEvent::DATA_NEXT_COMMAND);
 		}
 
-		m_event_mask |= NetEvent::DATA_COMMAND;
+		addToNetEventMask(NetEvent::DATA_COMMAND);
 		
 
 	}
@@ -1762,7 +1760,7 @@ void Creature::calcAction()
 	{
 		if (m_action.m_type!= Action::NOACTION)
 		{
-			m_event_mask |= NetEvent::DATA_ACTION;
+			addToNetEventMask(NetEvent::DATA_ACTION);
 		}
 		m_action.m_type = Action::NOACTION;
 		return;
@@ -1772,7 +1770,7 @@ void Creature::calcAction()
 	
 
 	DEBUG5("calc action for command %i",m_command.m_type);
-	m_event_mask |= NetEvent::DATA_ACTION;
+	addToNetEventMask(NetEvent::DATA_ACTION);
 
 
 	// Reichweite der Aktion berechnen
@@ -1903,7 +1901,8 @@ void Creature::calcAction()
 					m_command.m_damage_mult += 2;
 					
 					// Geschwindigkeit normieren, mit Schadensmultiplikator multiplizieren
-					m_speed.normalize();
+					Vector speed = getSpeed();
+					speed.normalize();
 
 					if (m_command.m_type == Action::CHARGE)
 						m_command.m_damage_mult *= 0.85;
@@ -1913,8 +1912,8 @@ void Creature::calcAction()
 					// Schaden neu berechnen
 					recalcDamage();
 
-					m_speed *= sqrt(m_command.m_damage_mult);
-					m_event_mask |= NetEvent::DATA_MOVE_INFO;
+					speed *= sqrt(m_command.m_damage_mult);
+					setSpeed(speed);
 				}
 				else
 				{
@@ -1923,7 +1922,7 @@ void Creature::calcAction()
 					// Vektor von der eigenen Position zum Ziel, normieren
 					Vector dir = goal-pos;
 					dir.normalize();
-					m_speed = dir;
+					setSpeed(dir);
 					
 					if (dir.getLength()!=0)
 					{
@@ -1934,7 +1933,6 @@ void Creature::calcAction()
 						m_action.m_type = Action::NOACTION;
 						m_action.m_elapsed_time =0;
 					}
-					m_event_mask |= NetEvent::DATA_MOVE_INFO;
 
 				}
 
@@ -1974,7 +1972,7 @@ void Creature::calcStatusModCommand()
 	if (m_dyn_attr.m_status_mod_time[Damage::CONFUSED]>0 && World::getWorld()->isServer())
 	{
 		// aktuelle Bewegungsrichtung
-		Vector v = m_speed;
+		Vector v = getSpeed();
 		float range = m_base_attr.m_step_length;
 
 		// Normieren der Bewegungsgeschwindigkeit
@@ -2032,7 +2030,7 @@ void Creature::calcStatusModCommand()
 			m_command.m_goal = npos;
 			m_command.m_goal_object_id =0;
 			m_command.m_range = getBaseAttrMod()->m_attack_range;
-			m_event_mask |= NetEvent::DATA_COMMAND;
+			addToNetEventMask(NetEvent::DATA_COMMAND);
 
 			// Im Falle von Beserker nur Nahkampf
 			if (m_dyn_attr.m_status_mod_time[Damage::BERSERK]>0)
@@ -2048,8 +2046,8 @@ void Creature::calcStatusModCommand()
 		{
 			// Laufen
 			m_command.m_type = Action::WALK;
-			m_speed = v;
-			m_event_mask |= NetEvent::DATA_COMMAND | NetEvent::DATA_MOVE_INFO;
+			setSpeed(v);
+			addToNetEventMask(NetEvent::DATA_COMMAND);
 			return;
 		}
 		DEBUG5("confused command %i",m_command.m_type);
@@ -2136,11 +2134,11 @@ void Creature::calcStatusModCommand()
 			if (getDynAttr()->m_timer.getTime() >1000)
 			{
 				m_dyn_attr.m_status_mod_time[Damage::BERSERK] =0;
-				m_event_mask |= NetEvent::DATA_STATUS_MODS;
+				addToNetEventMask(NetEvent::DATA_STATUS_MODS);
 			}
 			
 		}
-		m_event_mask |= NetEvent::DATA_COMMAND;
+		addToNetEventMask(NetEvent::DATA_COMMAND);
 	}
 }
 
@@ -2154,12 +2152,12 @@ void Creature::calcWalkDir(Vector goal,WorldObject* goalobj)
 	Vector dir;
 
 	// wenn als Ziel ein Lebenwesen angegeben ist
-	if (goalobj !=0 && goalobj->getTypeInfo()->m_type != TypeInfo::TYPE_FIXED_OBJECT )
+	if (goalobj !=0 && goalobj->getType() != "FIXED_OBJECT" )
 	{
 		DEBUG5("using pot field of object %i",goalobj->getId());
 		Creature* cr = (Creature*) goalobj;
 		// Potentialfeld des Ziellebewesens verwenden
-		cr->getPathDirection(pos,getGridLocation()->m_region, 2*getShape()->m_radius, m_layer,dir);
+		cr->getPathDirection(pos,getRegionId(), 2*getShape()->m_radius, getLayer(),dir);
 	}
 	else
 	{
@@ -2202,7 +2200,7 @@ void Creature::calcWalkDir(Vector goal,WorldObject* goalobj)
 
 			m_path_info->m_dim = dim;
 			m_path_info->m_layer= LAYER_BASE | LAYER_AIR;
-			m_path_info->m_region=getGridLocation()->m_region;
+			m_path_info->m_region=getRegionId();
 			m_path_info->m_base_size = getShape()->m_radius*2;
 			m_path_info->m_quality=qual;
 			m_path_info->m_id = getId();
@@ -2213,11 +2211,11 @@ void Creature::calcWalkDir(Vector goal,WorldObject* goalobj)
 		else
 		{
 
-			if ( m_path_info->m_region != getGridLocation()->m_region)
+			if ( m_path_info->m_region != getRegionId())
 			{
 				// Ziel befindet sich in einer anderen Region als die des Potentialfeldes
 				// Region anpassen, neu berechnen
-				m_path_info->m_region=getGridLocation()->m_region;
+				m_path_info->m_region=getRegionId();
 				recalc = true;
 			}
 
@@ -2280,14 +2278,13 @@ void Creature::calcWalkDir(Vector goal,WorldObject* goalobj)
 		m_action.m_type = Action::NOACTION;
 		m_action.m_elapsed_time =0;
 		m_command.m_damage_mult=1;
-		m_event_mask |= NetEvent::DATA_COMMAND | NetEvent::DATA_ACTION;
+		addToNetEventMask(NetEvent::DATA_COMMAND | NetEvent::DATA_ACTION);
 		return;
 	}
 	else
 	{
-		m_event_mask |= NetEvent::DATA_MOVE_INFO;
 		// TODO: Wende über 90 Grad behandeln
-		m_speed = dir;
+		setSpeed(dir);
 
 	}
 }
@@ -2310,7 +2307,7 @@ void Creature::clearCommand(bool success)
 	m_command.m_goal_object_id =0;
 	m_command.m_range =1;
 	m_script_command_timer =0;
-	m_event_mask |= NetEvent::DATA_COMMAND;
+	addToNetEventMask(NetEvent::DATA_COMMAND);
 }
 
 bool Creature::update (float time)
@@ -2391,7 +2388,7 @@ bool Creature::update (float time)
 			if (i==Damage::BERSERK || i==Damage::CONFUSED)
 			{
 				m_command.m_type = Action::NOACTION;
-				m_event_mask |= NetEvent::DATA_COMMAND;
+				addToNetEventMask(NetEvent::DATA_COMMAND);
 			}
 		}
 
@@ -2476,7 +2473,7 @@ bool Creature::update (float time)
 			for (it=res.begin();it!=res.end();++it)
 			{
 				// Schaden austeilen
-				if ((*it)->getTypeInfo()->m_type != TypeInfo::TYPE_FIXED_OBJECT)
+				if ((*it)->getType() != "FIXED_OBJECT")
 				{
 					cr = (Creature*) (*it);
 					cr->takeDamage(&d);
@@ -2498,7 +2495,7 @@ bool Creature::update (float time)
 				// Schaden pro Sekunde 1/60 der HP
 				DEBUG5("poisoned");
 				m_dyn_attr.m_health -= 500*m_base_attr_mod.m_max_health / 60000;
-				m_event_mask |= NetEvent::DATA_HP;
+				addToNetEventMask(NetEvent::DATA_HP);
 			}
 
 			// brennend
@@ -2507,7 +2504,7 @@ bool Creature::update (float time)
 				// Schaden pro Sekunde 1/90 der HP (bei 0 Feuerresistenz)
 				DEBUG5("burning");
 				m_dyn_attr.m_health -= (100-m_base_attr_mod.m_resistances[Damage::FIRE])*500*m_base_attr_mod.m_max_health / 9000000;
-				m_event_mask |= NetEvent::DATA_HP;
+				addToNetEventMask(NetEvent::DATA_HP);
 			}
 		}
 
@@ -2590,7 +2587,7 @@ bool Creature::update (float time)
 					m_action.m_type = Action::DEAD;
 					m_action.m_time = 1000;
 
-					m_event_mask |= NetEvent::DATA_STATE | NetEvent::DATA_ACTION;
+					addToNetEventMask(NetEvent::DATA_ACTION);
 				}
 				break;
 
@@ -2619,13 +2616,13 @@ bool Creature::update (float time)
 
 void Creature::gainExperience (float exp)
 {
-	if (getTypeInfo()->m_type != TypeInfo::TYPE_PLAYER)
+	if (getType() != "PLAYER")
 		return;
 
 
 	// Erfahrung dazu addieren
 	m_dyn_attr.m_experience += exp;
-	m_event_mask |= NetEvent::DATA_EXPERIENCE;
+	addToNetEventMask(NetEvent::DATA_EXPERIENCE);
 
 	// Solange Level aufsteigen, bis exp < max_exp
 	while (m_dyn_attr.m_experience>= m_base_attr.m_max_experience)
@@ -2636,7 +2633,7 @@ void Creature::gainExperience (float exp)
 
 void Creature::gainLevel()
 {
-	m_event_mask |= NetEvent::DATA_LEVEL;
+	addToNetEventMask(NetEvent::DATA_LEVEL);
 
 }
 
@@ -3401,13 +3398,13 @@ bool Creature::takeDamage(Damage* d)
 	FightStatistic* fstat= &(getFightStatistic());
 	FightStatistic* attfstat=0;
 	Creature* attacker = dynamic_cast<Creature*>(getRegion()->getObject(d->m_attacker_id));
-	if (wo !=0  && wo->getTypeInfo()->m_type == TypeInfo::TYPE_PLAYER)
+	if (wo !=0  && wo->getType() == "PLAYER")
 	{
 		attfstat = &(attacker->getFightStatistic());
 	}
 	
 	// eigene Daten setzen
-	if (wo !=0 && getTypeInfo()->m_type==TypeInfo::TYPE_PLAYER)
+	if (wo !=0 && getType()=="PLAYER")
 	{
 		if (fabs(fstat->m_block_chance - blockchance) >0.01
 				  || fabs(fstat->m_damage_got_perc - armorfak) >0.01
@@ -3416,14 +3413,14 @@ bool Creature::takeDamage(Damage* d)
 			fstat->m_block_chance = blockchance;
 			fstat->m_last_attacker = wo->getName();
 			fstat->m_damage_got_perc = armorfak;
-			m_event_mask |= NetEvent::DATA_FIGHT_STAT;
+			addToNetEventMask(NetEvent::DATA_FIGHT_STAT);
 			
 			DEBUG5("blockchance %f damage perc %f attacker %s",blockchance, armorfak, fstat->m_last_attacker.c_str());
 		}
 	}
 	
 	// Daten des Angreifers setzen
-	if (attacker !=0 && attacker->getTypeInfo()->m_type==TypeInfo::TYPE_PLAYER)
+	if (attacker !=0 && attacker->getType()=="PLAYER")
 	{
 		attacker->updateFightStat(1-blockchance, armorfak,getName());
 	}
@@ -3466,7 +3463,7 @@ bool Creature::takeDamage(Damage* d)
 				if (t>m_dyn_attr.m_status_mod_time[i])
 				{
 					m_dyn_attr.m_status_mod_time[i] =t;
-					m_event_mask |= NetEvent::DATA_STATUS_MODS;
+					addToNetEventMask(NetEvent::DATA_STATUS_MODS);
 				}
 
 				DEBUG5("applying status mod %i for %f ms",i,t);
@@ -3482,7 +3479,7 @@ bool Creature::takeDamage(Damage* d)
 	if (dmg>0)
 	{
 		m_dyn_attr.m_effect_time[CreatureDynAttr::BLEEDING] = std::max(m_dyn_attr.m_effect_time[CreatureDynAttr::BLEEDING],150.0f);
-		m_event_mask |= NetEvent::DATA_HP | NetEvent::DATA_EFFECTS;
+		addToNetEventMask(NetEvent::DATA_HP | NetEvent::DATA_EFFECTS);
 	}
 
 	// Statikschild wenn mehr als 2% der Lebenspunkte verloren
@@ -3526,7 +3523,7 @@ void Creature::applyDynAttrMod(CreatureDynAttrMod* mod)
 
 	if (mod->m_dhealth !=0)
 	{
-		m_event_mask |= NetEvent::DATA_HP;
+		addToNetEventMask( NetEvent::DATA_HP);
 	}
 
 
@@ -3540,11 +3537,10 @@ void Creature::applyDynAttrMod(CreatureDynAttrMod* mod)
 			if (i==Damage::CONFUSED || i==Damage::BERSERK)
 			{
 				clearCommand(true);
-				m_event_mask |= NetEvent::DATA_COMMAND;
-				m_event_mask |= NetEvent::DATA_ACTION;
-					
+				addToNetEventMask(NetEvent::DATA_COMMAND | NetEvent::DATA_ACTION);
+				
 			}
-			m_event_mask |= NetEvent::DATA_STATUS_MODS;
+			addToNetEventMask(NetEvent::DATA_STATUS_MODS);
 		}
 	}
 }
@@ -3575,15 +3571,15 @@ void Creature::applyBaseAttrMod(CreatureBaseAttrMod* mod, bool add)
 	// Modifikationen feststellen
 	if (mod->m_dwalk_speed!=0 )
 	{
-		m_event_mask |= NetEvent::DATA_WALK_SPEED;
+		addToNetEventMask(NetEvent::DATA_WALK_SPEED);
 	}
 	if (mod->m_dattack_speed !=0 || mod->m_ddexterity!=0)
 	{
-		m_event_mask |= NetEvent::DATA_ATTACK_SPEED;
+		addToNetEventMask(NetEvent::DATA_ATTACK_SPEED);
 	}
 	if (mod->m_dmax_health !=0 || mod->m_dstrength!=0)
 	{
-		m_event_mask |= NetEvent::DATA_MAX_HP | NetEvent::DATA_HP;
+		addToNetEventMask(NetEvent::DATA_MAX_HP | NetEvent::DATA_HP);
 	}
 
 	// einige Untergrenzen pruefen
@@ -3608,7 +3604,7 @@ void Creature::applyBaseAttrMod(CreatureBaseAttrMod* mod, bool add)
 		m_base_attr_mod.m_abilities[i] |= mod->m_xabilities[i];
 		if (mod->m_xabilities[i]!=0)
 		{
-			m_event_mask |= NetEvent::DATA_ABILITIES;
+			addToNetEventMask(NetEvent::DATA_ABILITIES);
 		}
 	}
 
@@ -3618,7 +3614,7 @@ void Creature::applyBaseAttrMod(CreatureBaseAttrMod* mod, bool add)
 
 	if (mod->m_xspecial_flags!=0)
 	{
-		m_event_mask |= NetEvent::DATA_FLAGS;
+		addToNetEventMask(NetEvent::DATA_FLAGS);
 	}
 
 	// Wenn add == true in die Liste der wirksamen Modifikationen aufnehmen
@@ -3658,15 +3654,15 @@ bool Creature::removeBaseAttrMod(CreatureBaseAttrMod* mod)
 	// Modifikationen feststellen
 	if (mod->m_dwalk_speed!=0)
 	{
-		m_event_mask |= NetEvent::DATA_WALK_SPEED;
+		addToNetEventMask(NetEvent::DATA_WALK_SPEED);
 	}
 	if (mod->m_dattack_speed !=0 || mod->m_ddexterity!=0)
 	{
-		m_event_mask |= NetEvent::DATA_ATTACK_SPEED;
+		addToNetEventMask(NetEvent::DATA_ATTACK_SPEED);
 	}
 	if (mod->m_dmax_health !=0 || mod->m_dstrength!=0)
 	{
-		m_event_mask |= NetEvent::DATA_MAX_HP | NetEvent::DATA_HP;
+		addToNetEventMask(NetEvent::DATA_MAX_HP | NetEvent::DATA_HP);
 	}
 
 	for (i=0;i<4;i++)
@@ -3682,14 +3678,14 @@ bool Creature::removeBaseAttrMod(CreatureBaseAttrMod* mod)
 		if ( mod->m_xabilities[i]!=0)
 		{
 			ret = true;
-			m_event_mask |= NetEvent::DATA_ABILITIES;
+			addToNetEventMask(NetEvent::DATA_ABILITIES);
 		}
 	}
 
 	// Wenn Flags veraendert wurden neu berechnen
 	if (mod->m_xspecial_flags!=0)
 	{
-		m_event_mask |= NetEvent::DATA_FLAGS;
+		addToNetEventMask(NetEvent::DATA_FLAGS);
 		ret = true;
 	}
 
@@ -3765,7 +3761,7 @@ void Creature::getPathDirection(Vector pos,short region, float base_size, short 
 		{
 			(*pi)->m_layer= LAYER_AIR;
 		}
-		(*pi)->m_region=getGridLocation()->m_region;
+		(*pi)->m_region=getRegionId();
 		(*pi)->m_base_size = bsize;
 		(*pi)->m_quality=qual;
 		(*pi)->m_id = getId();
@@ -3774,17 +3770,17 @@ void Creature::getPathDirection(Vector pos,short region, float base_size, short 
 	}
 	else
 	{
-		if ( (*pi)->m_region != getGridLocation()->m_region)
+		if ( (*pi)->m_region != getRegionId())
 		{
 			// Wegfindeinformation gilt fuer eine andere Region als die, in der sich das Lebewesen befindet
 			// Region neu setzen und neu berechnen
-			(*pi)->m_region=getGridLocation()->m_region;
+			(*pi)->m_region=getRegionId();
 			recalc = true;
 			DEBUG5("recalc: new in Region");
 		}
 
 		// Ziel befindet sich in einer anderen Region, keinen Weg angeben
-		if ( region != getGridLocation()->m_region)
+		if ( region != getRegionId())
 		{
 			dir = Vector(0,0);
 			return;
@@ -3915,8 +3911,8 @@ void Creature::toString(CharConv* cv)
 		cv->toBuffer(getBaseAttrMod()->m_abilities[i]);
 	}
 
-	cv->toBuffer(m_speed.m_x);
-	cv->toBuffer(m_speed.m_y);
+	cv->toBuffer(getSpeed().m_x);
+	cv->toBuffer(getSpeed().m_y);
 
 
 }
@@ -3974,8 +3970,10 @@ void Creature::fromString(CharConv* cv)
 		cv->fromBuffer(getBaseAttrMod()->m_abilities[i]);
 	}
 
-	cv->fromBuffer(m_speed.m_x);
-	cv->fromBuffer(m_speed.m_y);
+	Vector speed;
+	cv->fromBuffer(speed.m_x);
+	cv->fromBuffer(speed.m_y);
+	setSpeed(speed);
 }
 
 bool Creature::checkAbility(Action::ActionType at)
@@ -4063,7 +4061,7 @@ void Creature::writeNetEvent(NetEvent* event, CharConv* cv)
 		if (m_action.m_type!=0)
 		{
 			float acttime = m_action.m_time - m_action.m_elapsed_time;
-			Vector goal = getShape()->m_center + m_speed * acttime;
+			Vector goal = getShape()->m_center + getSpeed() * acttime;
 		}
 	}
 
@@ -4154,8 +4152,8 @@ void Creature::writeNetEvent(NetEvent* event, CharConv* cv)
 
 	if (event->m_data & NetEvent::DATA_MOVE_INFO)
 	{
-		cv->toBuffer(m_speed.m_x);
-		cv->toBuffer(m_speed.m_y);
+		cv->toBuffer(getSpeed().m_x);
+		cv->toBuffer(getSpeed().m_y);
 	}
 
 	if (event->m_data & NetEvent::DATA_LEVEL)
@@ -4406,10 +4404,10 @@ void Creature::processNetEvent(NetEvent* event, CharConv* cv)
 		}
 		else
 		{
-			DEBUG5("pos %f %f speed %f %f", getShape()->m_center.m_x, getShape()->m_center.m_y, m_speed.m_x, m_speed.m_y); 
+			DEBUG5("pos %f %f speed %f %f", getShape()->m_center.m_x, getShape()->m_center.m_y, getSpeed().m_x, getSpeed().m_y); 
 			// Bewegungsgeschwindigkeit so setzen, dass Ziel in der richtigen Zeit erreicht wird
-			m_speed = (goal - getShape()->m_center) * (1/goaltime);
-			DEBUG5("goal %f %f newspeed %f %f", goal.m_x, goal.m_y, m_speed.m_x, m_speed.m_y); 
+			setSpeed((goal - getShape()->m_center) * (1/goaltime));
+			DEBUG5("goal %f %f newspeed %f %f", goal.m_x, goal.m_y, getSpeed().m_x, getSpeed().m_y); 
 		}
 
 	}
@@ -4452,7 +4450,7 @@ void Creature::processNetEvent(NetEvent* event, CharConv* cv)
 			*/
 			if (Action::getActionInfo(m_action.m_type)->m_base_action == Action::WALK)
 			{
-				getShape()->m_angle = m_speed.angle();
+				setAngle(getSpeed().angle());
 
 			}
 		}
@@ -4481,14 +4479,14 @@ int Creature::getValue(std::string valname)
 bool Creature::setValue(std::string valname)
 {
 	bool ret;
-	ret = m_base_attr.setValue(valname, m_event_mask);
+	ret = m_base_attr.setValue(valname, getEventMaskRef());
 	if (ret >0)
 	{
 		calcBaseAttrMod();
 		return ret;
 	}
 	
-	ret = m_dyn_attr.setValue(valname, m_event_mask);
+	ret = m_dyn_attr.setValue(valname, getEventMaskRef());
 	if (ret >0)
 	{
 		return ret;
@@ -4500,13 +4498,13 @@ bool Creature::setValue(std::string valname)
 
 void Creature::clearSpeakText()
 {
-	m_event_mask |= NetEvent::DATA_SPEAK_TEXT;
+	addToNetEventMask(NetEvent::DATA_SPEAK_TEXT);
 	m_speak_text.clear();
 }
 
 void Creature::speakText(CreatureSpeakText& text)
 {
-	m_event_mask |= NetEvent::DATA_SPEAK_TEXT;
+	addToNetEventMask(NetEvent::DATA_SPEAK_TEXT);
 	
 	m_speak_text = text;
 	DEBUG5("speak %s for %f ms",text.m_text.c_str(), text.m_time);
@@ -4602,7 +4600,7 @@ void Creature::setDialogue(int id)
 	if (id != m_dialogue_id)
 	{
 		m_dialogue_id = id;
-		m_event_mask |= NetEvent::DATA_DIALOGUE;
+		addToNetEventMask(NetEvent::DATA_DIALOGUE);
 		
 		if (id !=0)
 		{
@@ -4623,7 +4621,7 @@ void Creature::updateFightStat(float hitchance, float armorperc, std::string att
 		fstat->m_hit_chance = hitchance;
 		fstat->m_damage_dealt_perc = armorperc;
 		fstat->m_last_attacked = attacked;
-		m_event_mask |= NetEvent::DATA_FIGHT_STAT;
+		addToNetEventMask(NetEvent::DATA_FIGHT_STAT);
 		
 		DEBUG5("hitchance %f damage perc %f attacked %s",hitchance, armorperc, attacked.c_str());
 	}

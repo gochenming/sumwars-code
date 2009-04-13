@@ -518,7 +518,7 @@ void Projectile::handleFlying(float dtime)
 			}
 		}
 
-		if (hit->getTypeInfo()->m_type != WorldObject::TypeInfo::TYPE_FIXED_OBJECT && bounce)
+		if (hit->isCreature() && bounce)
 		{
 			// Projektil hat ein Lebewesen getroffen, springt weiter
 			setState(FLYING);
