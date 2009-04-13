@@ -42,7 +42,7 @@
 #include "party.h"
 #include "itemfactory.h"
 #include "objectfactory.h"
-#include "netevent.h"
+#include "networkstruct.h"
 #include "worldloader.h"
 #include "templateloader.h"
 #include "quest.h"

@@ -6,7 +6,7 @@
 #include "worldobject.h"
 #include "tiles.h"
 #include "dropitem.h"
-#include "netevent.h"
+#include "networkstruct.h"
 #include "projectile.h"
 #include "objectfactory.h"
 #include "dialogue.h"
