@@ -273,17 +273,15 @@ class WorldObject : public GameObject
 	 * \param event NetEvent das beschrieben wird
 	 * \param cv Bitstream
 	 */
-	virtual void writeNetEvent(NetEvent* event, CharConv* cv)
-	{
-	}
+	virtual void writeNetEvent(NetEvent* event, CharConv* cv);
+	
 	
 	/**
 	 * \fn virtual void processNetEvent(NetEvent* event, CharConv* cv)
 	 * \brief Fuehrt die Wirkung eines NetEvents auf das Objekt aus. Weitere Daten werden aus dem Bitstream gelesen
 	 */
-	virtual void processNetEvent(NetEvent* event, CharConv* cv)
-	{
-	}
+	virtual void processNetEvent(NetEvent* event, CharConv* cv);
+	
 	
 	/**
 	 * \fn virtual bool reactOnUse (int id)

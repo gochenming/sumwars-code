@@ -97,10 +97,10 @@ class DropItem
 		
 	private:
 		/**
-		* \var float m_speed
+		* \var float m_drop_speed
 		* \brief Fallgeschwindigkeit
 		*/
-		float m_speed;
+		float m_drop_speed;
 	
 		
 		

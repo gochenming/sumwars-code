@@ -61,7 +61,7 @@ Region* GameObject::getRegion()
 void GameObject::setSpeed(Vector speed)
 {
 	m_speed =speed;
-	m_event_mask |= NetEvent::DATA_MOVE_INFO;
+	m_event_mask |= NetEvent::DATA_SPEED;
 }
 
 void GameObject::setAngle(float angle)
@@ -138,5 +138,98 @@ string GameObject::getNameId()
 	out_stream.str("");
 	out_stream << m_subtype << ":" << getId();
 	return out_stream.str();
+}
+
+void GameObject::writeNetEvent(NetEvent* event, CharConv* cv)
+{
+	/*
+	if (event->m_data & NetEvent::DATA_TYPE)
+	{
+		cv->toBuffer(m_type);
+		cv->toBuffer(m_subtype);
+	}
+	
+	if (event->m_data & NetEvent::DATA_SHAPE)
+	{
+		cv->toBuffer(m_shape.m_center.m_x);
+		cv->toBuffer(m_shape.m_center.m_y);
+		cv->toBuffer((char) m_shape.m_type);
+		if (m_shape.m_type==Shape::RECT)
+		{
+			cv->toBuffer(m_shape.m_extent.m_x);
+			cv->toBuffer(m_shape.m_extent.m_y);
+		}
+		else
+		{
+			cv->toBuffer(m_shape.m_radius);
+			cv->toBuffer(m_shape.m_radius);
+		}
+		cv->toBuffer((char) m_layer);
+		cv->toBuffer(m_shape.m_angle);
+	}
+	
+	if (event->m_data & NetEvent::DATA_STATE)
+	{
+		cv->toBuffer((char) getState());
+	}
+	*/
+	/*
+	if (event->m_data & NetEvent::DATA_SPEED)
+	{
+		cv->toBuffer(getSpeed().m_x);
+		cv->toBuffer(getSpeed().m_y);
+	}
+*/
+}
+
+void GameObject::processNetEvent(NetEvent* event, CharConv* cv)
+{
+	/*
+	if (event->m_data & NetEvent::DATA_TYPE)
+	{
+		cv->fromBuffer(m_type);
+		cv->fromBuffer(m_subtype);
+	}
+	
+	if (event->m_data & NetEvent::DATA_SHAPE)
+	{
+		
+		char ctmp;
+
+		cv->fromBuffer<float>(m_shape.m_center.m_x) ;
+		cv->fromBuffer<float>(m_shape.m_center.m_y);
+		cv->fromBuffer<char>(ctmp);
+		m_shape.m_type = (Shape::ShapeType) ctmp;
+		if (m_shape.m_type==Shape::RECT)
+		{
+			cv->fromBuffer<float>(m_shape.m_extent.m_x);
+			cv->fromBuffer<float>(m_shape.m_extent.m_y);
+		}
+		else
+		{
+			cv->fromBuffer<float>(m_shape.m_radius);
+			cv->fromBuffer<float>(m_shape.m_radius);
+		}
+		cv->fromBuffer<char>(ctmp);
+		m_layer  = (Layer) ctmp;
+		cv->fromBuffer<float>(m_shape.m_angle);
+	}
+	
+	if (event->m_data & NetEvent::DATA_STATE)
+	{
+		char ctmp;
+		cv->fromBuffer(ctmp);
+		setState((State) ctmp);
+		DEBUG5("object %i changed state to %i",getId(),ctmp);
+	}
+	*/
+	/*
+	if (event->m_data & NetEvent::DATA_SPEED)
+	{
+		cv->fromBuffer(m_speed.m_x);
+		cv->fromBuffer(m_speed.m_y);
+
+	}
+	*/
 }
 

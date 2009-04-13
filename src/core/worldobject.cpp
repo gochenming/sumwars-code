@@ -173,3 +173,13 @@ void WorldObject::setCategory(Category cat)
 {
 	m_category = cat;
 }
+
+void WorldObject::writeNetEvent(NetEvent* event, CharConv* cv)
+{
+	GameObject::writeNetEvent(event,cv);
+}
+
+void WorldObject::processNetEvent(NetEvent* event, CharConv* cv)
+{
+	GameObject::processNetEvent(event,cv);
+}

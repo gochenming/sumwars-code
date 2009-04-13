@@ -6,6 +6,7 @@ class Region;
 #include "debug.h"
 #include "geometry.h"
 #include "charconv.h"
+#include "networkstruct.h"
 #include <string>
 
 /**
@@ -337,6 +338,22 @@ class GameObject
 		 * \brief Gibt Name mit angehaengter ID aus
 		 */
 		std::string getNameId();
+		
+		/**
+		 * \fn virtual void writeNetEvent(NetEvent* event, CharConv* cv)
+		 * \brief Schreibt die Daten zu einem NetEvent in den Bitstream
+		 * \param event NetEvent das beschrieben wird
+		 * \param cv Bitstream
+		 */
+		virtual void writeNetEvent(NetEvent* event, CharConv* cv);
+	
+	
+		/**
+		 * \fn virtual void processNetEvent(NetEvent* event, CharConv* cv)
+		 * \brief Fuehrt die Wirkung eines NetEvents auf das Objekt aus. Weitere Daten werden aus dem Bitstream gelesen
+	 	*/
+		virtual void processNetEvent(NetEvent* event, CharConv* cv);
+		
 		
 		/**
 		 * \fn virtual bool update ( float time)

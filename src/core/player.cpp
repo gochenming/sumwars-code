@@ -1031,12 +1031,12 @@ void Player::increaseAttribute(CreatureBaseAttr::Attribute attr)
 			getBaseAttr()->m_max_health += 5;
 			getBaseAttrMod()->m_max_health += 5;
 			getDynAttr()->m_health +=5;
-			addToNetEventMask(NetEvent::DATA_HP | NetEvent::DATA_MAX_HP);
+			addToNetEventMask(NetEvent::DATA_HP | NetEvent::DATA_ATTRIBUTES_LEVEL);
 			break;
 		case (CreatureBaseAttr::DEXTERITY):
 			getBaseAttr()->m_dexterity++;
 			getBaseAttr()->m_attack_speed +=20;
-			addToNetEventMask(NetEvent::DATA_ATTACK_SPEED);
+			addToNetEventMask(NetEvent::DATA_ATTACK_WALK_SPEED);
 			break;
 		case (CreatureBaseAttr::WILLPOWER):
 			getBaseAttr()->m_willpower++;
@@ -1087,7 +1087,7 @@ void Player::gainLevel()
 	// Schaden neu berechnen
 	recalcDamage();
 
-	addToNetEventMask(NetEvent::DATA_LEVEL | NetEvent::DATA_HP | NetEvent::DATA_MAX_HP | NetEvent::DATA_EXPERIENCE);
+	addToNetEventMask(NetEvent::DATA_ATTRIBUTES_LEVEL | NetEvent::DATA_HP | NetEvent::DATA_EXPERIENCE);
 	addToNetEventMask(NetEvent::DATA_SKILL_ATTR_POINTS);
 }
 
@@ -1715,7 +1715,7 @@ void Player::calcBaseAttrMod()
 
 			if (si->m_weapon_attr ->m_dattack_speed!=0)
 			{
-				addToNetEventMask(NetEvent::DATA_ATTACK_SPEED);
+				addToNetEventMask(NetEvent::DATA_ATTACK_WALK_SPEED);
 			}
 		}
 	}
