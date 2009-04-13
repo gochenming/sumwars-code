@@ -71,13 +71,20 @@ void WorldObject::toString(CharConv* cv)
 {
 	DEBUG5("worldobject::tostring");
 	GameObject::toString(cv);
-
+	cv->toBuffer<short>(m_fraction);
+	cv->toBuffer<short>(m_category);
+	
 }
 
 void WorldObject::fromString(CharConv* cv)
 {
 	GameObject::fromString(cv);
+	short tmp;
+	cv->fromBuffer<short>(tmp);
+	setFraction( (Fraction) tmp);
 	
+	cv->fromBuffer<short>(tmp);
+	setCategory( (Category) tmp);
 }
 
 
@@ -155,4 +162,14 @@ bool WorldObject::setValue(std::string valname)
 	}
 	
 	return false;
+}
+
+void WorldObject::setFraction(Fraction fr)
+{
+	m_fraction = fr;
+}
+
+void WorldObject::setCategory(Category cat)
+{
+	m_category = cat;
 }
