@@ -322,10 +322,7 @@ class WorldObject : public GameObject
 	 * \brief setzt die Fraktion
 	 * \param fr Fraktion
 	 */
-	void setFraction(Fraction fr)
-	{
-		m_fraction = fr;
-	}
+	void setFraction(Fraction fr);
 	
 	/**
 	 * \fn Category getCategory()
@@ -335,6 +332,13 @@ class WorldObject : public GameObject
 	{
 		return m_category;
 	}
+	
+	/**
+	 * \fn void setCategory(Category cat)
+	 * \brief Setzt die Kategorie
+	 * \param cat neue Kategorie
+	 */
+	void setCategory(Category cat);
 	
 	
 	/**
