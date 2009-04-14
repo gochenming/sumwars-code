@@ -725,6 +725,20 @@ class Region
 		void setRegionData(CharConv* cv, WorldObjectMap* players);
 
 		/**
+		 * \fn void getRegionCheckData(CharConv* cv)
+		 * \brief Gibt die Daten aus, mit denen sich das Inventar der Welt ueberpruefen laesst
+		 * \param cv Eingabepuffer
+		 */
+		void getRegionCheckData(CharConv* cv);
+		
+		/**
+		 * \fn void checkRegionData(CharConv* cv)
+		 * \brief Prueft die Daten der Region mit Hilfe der im Puffer vorliegenden Daten
+		 * \param cv Ausgabepuffer
+		 */
+		void checkRegionData(CharConv* cv);
+		
+		/**
 		 * \fn  setTile(Tile tile,short x, short y)
 		 * \brief setzt an der angegebenen Position das Tile
 		 * \param tile Tile

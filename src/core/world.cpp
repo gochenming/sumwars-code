@@ -995,9 +995,8 @@ void World::update(float time)
 {
 
 	// Timer weiterzaehlen und Limits feststellen
-	float timer_max[3];
-	timer_max[0] = 200; timer_max[1] = 500; timer_max[2] = 1000;
-	for (int i=0; i<3; i++)
+	static float timer_max[6] = {200,500,1000,2000,5000,10000};
+	for (int i=0; i<6; i++)
 	{
 		m_timer[i] += time;
 		m_timer_limit[i] = false;
@@ -1551,6 +1550,7 @@ bool World::writeNetEvent(Region* region,NetEvent* event, CharConv* cv)
 		{
 			proj = region->getProjectile(event->m_id);
 			proj->toString(cv);
+			proj->clearNetEventMask();
 		}
 
 		if (event->m_type == NetEvent::PROJECTILE_STAT_CHANGED)
@@ -1570,9 +1570,9 @@ bool World::writeNetEvent(Region* region,NetEvent* event, CharConv* cv)
 			di = region->getDropItem(event->m_id);
 			if (di !=0)
 			{
-				cv->toBuffer(di->m_x);
-				cv->toBuffer(di->m_y);
-				di->m_item->toString(cv);
+				
+				di->toString(cv);
+				di->clearNetEventMask();
 			}
 			else
 				return false;

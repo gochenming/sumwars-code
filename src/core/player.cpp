@@ -1513,7 +1513,7 @@ void Player::performActionCritPart(Vector goal, WorldObject* goalobj)
 
 			// Item einfuegen
 			insertItem(itm);
-
+			DEBUG5("take item %p",itm);
 		}
 		else
 		{

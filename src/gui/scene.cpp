@@ -584,21 +584,20 @@ void Scene::updateItems()
 		else
 		{
 			// Koordinaten des Objektes
-			float x=di->m_x;
-			float y=di->m_y;
-			float z = di->m_height;
+			Vector pos = di->getPosition();
+			float z = di->getHeight();
 
 			// Ortsvektor des Objektes
-			Ogre::Vector3 vec(x*25,z*50,y*25);
+			Ogre::Vector3 vec(pos.m_x*50,z*50,pos.m_y*50);
 
 			// an die richtige Stelle verschieben
 			Ogre::SceneNode* itm_node = m_scene_manager->getSceneNode(node_name);
 			itm_node->setPosition(vec);
 
-			float angle = di->m_angle_z;
+			float angle = di->getShape()->m_angle;
 			itm_node->setDirection(sin(angle),0,-cos(angle),Ogre::Node::TS_WORLD);
 
-			angle = di->m_angle_x;
+			angle = di->getAngleX();
 			itm_node->pitch(Ogre::Radian(angle));
 
 		}
@@ -1193,9 +1192,9 @@ void Scene::createItem(DropItem* di, std::string& name)
 
 	// SoundObjekt anlegen
 	SoundObject* obj = SoundSystem::createSoundObject(name);
-	if (di->m_height > 0)
+	if (di->getHeight() > 0.1f)
 	{
-		SoundTarget target = di->m_item->m_subtype;
+		SoundTarget target = di->getSubtype();
 		target += ":drop";
 		SoundName sound = SoundSystem::getSoundName(target);
 		obj->setSound(sound);
@@ -1203,10 +1202,11 @@ void Scene::createItem(DropItem* di, std::string& name)
 	}
 	DEBUG5("created item %s",name.c_str());
 	// Ortsvektor des Items
-	Ogre::Vector3 vec(di->m_x*25,0,di->m_y*25);
+	Vector pos = di->getPosition();
+	Ogre::Vector3 vec(pos.m_x*50,0,pos.m_y * 50);
 
 	// in die Liste einfuegen
-	m_drop_items->insert(std::make_pair(di->m_item->m_id,name));
+	m_drop_items->insert(std::make_pair(di->getId(),name));
 
 	// Node anlegen
 	Ogre::SceneNode* obj_node;
@@ -1214,14 +1214,14 @@ void Scene::createItem(DropItem* di, std::string& name)
 
 
 	// Informationen zum Rendern anfordern
-	RenderInfo ri = getItemRenderInfo(di->m_item->m_subtype);
+	RenderInfo ri = getItemRenderInfo(di->getSubtype());
 
 	// Je nach Typ das richtige Mesh benutzen
 	Ogre::Entity* ent;
 	ent = m_scene_manager->createEntity(name, ri.m_mesh);
 
 	// Objekt drehen
-	float angle = di->m_angle_z;
+	float angle = di->getShape()->m_angle;
 	obj_node->setDirection(sin(angle),0,-cos(angle),Ogre::Node::TS_WORLD);
 
 	obj_node->attachObject(ent);

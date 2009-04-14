@@ -392,7 +392,25 @@ class GameObject
 			return true;
 		}
 		
+		/**
+		 * \fn float getHeight()
+		 * \brief Gibt die Hoehe aus
+		 * 
+		 */
+		float getHeight()
+		{
+			return m_height;
+		}
 		
+		/**
+		 * \fn void setHeight(float height)
+		 * \brief Setzt die Hoehe
+		 * \param height Hoehe
+		 */
+		void setHeight(float height)
+		{
+			m_height = height;
+		}
 		
 	private:
 		/**
