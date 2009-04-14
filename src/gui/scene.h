@@ -228,14 +228,14 @@ class Scene
 	static void registerItem(Item::Subtype subtype, std::string mesh, std::string particle_system= "", float scaling_factor =1.0);
 
 	/**
-	 * \fn void registerProjectile(Projectile::ProjectileType type, std::string mesh, std::string particle_system = "", float scaling_factor =1.0)
+	 * \fn void registerProjectile(Projectile::Subtype type, std::string mesh, std::string particle_system = "", float scaling_factor =1.0)
 	 * \brief Registriert fuer ein Projektil das zugehoerige Mesh, Partikelsystem, Skalierungsfaktor
 	 * \param type Subtyp des Projektil
 	 * \param mesh Mesh fuer das Projektil. Leerer String, wenn kein Mesh verwendet wird
 	 * \param particle_system Name des Partikelsystems. Leerer string, wenn kein Partikelsystem verwendet wird
 	 * \param scaling_factor Faktor um den das Mesh und alle Partikelsystem skaliert werden
 	 */
-	static void registerProjectile(Projectile::ProjectileType type, std::string mesh, std::string particle_system = "", float scaling_factor =1.0);
+	static void registerProjectile(Projectile::Subtype type, std::string mesh, std::string particle_system = "", float scaling_factor =1.0);
 
 	/**
 	 * \fn void registerTile(Tile tile, std::string mesh, std::string particle_system, float scaling_factor =1.0)
@@ -394,11 +394,11 @@ class Scene
 	static RenderInfo getItemRenderInfo(Item::Subtype subtype);
 
 	/**
-	 * \fn RenderInfo getProjectileRenderInfo(Projectile::ProjectileType subtype)
+	 * \fn RenderInfo getProjectileRenderInfo(Projectile::Subtype subtype)
 	 * \brief Gibt die Informationen zum rendern eines Objektes aus
 	 * \param subtype Subtyp des Objektes
 	 */
-	static RenderInfo getProjectileRenderInfo(Projectile::ProjectileType subtype);
+	static RenderInfo getProjectileRenderInfo(Projectile::Subtype subtype);
 	
 	
 
@@ -422,10 +422,10 @@ class Scene
 	std::map<int,string>* m_projectiles;
 
 	/**
-	 * \var static std::map<Projectile::ProjectileType, RenderInfo> m_projectile_render_info
+	 * \var static std::map<Projectile::Subtype, RenderInfo> m_projectile_render_info
 	 *  \brief Speichert fuer die Projektile die Information zum Rendern
 	 */
-	static std::map<Projectile::ProjectileType, RenderInfo> m_projectile_render_info;
+	static std::map<Projectile::Subtype, RenderInfo> m_projectile_render_info;
 
 	/**
 	 * \var static std::map<GameObject::Subtype, RenderInfo> m_object_render_info

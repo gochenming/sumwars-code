@@ -130,23 +130,7 @@ class WorldObject : public GameObject
 		SUMMONED = 0x1000
 	};
 
-	/**
-	 * \enum Fraction
-	 * \brief Parteien fuer die Lebewesen kaempfen koennen
-	*/
-	enum Fraction
-	{
-		NOFRACTION = 0,
-		FRAC_HUMAN = 1,
-		FRAC_DEMON = 2,
-		FRAC_UNDEAD = 3,
-		FRAC_DWARF = 4,
-		FRAC_SUMMONER = 5,
-		FRAC_MONSTER = 6,
-		FRAC_NEUTRAL_TO_ALL =8,
-		FRAC_HOSTILE_TO_ALL=9,
-		FRAC_PLAYER_PARTY = 10,
-	};
+	
 	
 	/**
 	 * \enum State

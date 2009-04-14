@@ -363,41 +363,11 @@ int EventSystem::createProjectile(lua_State *L)
 			float speed = 10.0;
 			DEBUG5("name %s dmg %s %f %f",tname.c_str(), dmgname.c_str(),pos.m_x,pos.m_y);
 
-			// Typ ermitteln
-			Projectile::ProjectileType type = Projectile::ARROW;
-			if (tname =="arrow") type = Projectile::ARROW;
-			else if (tname =="magic_arrow") type = Projectile::MAGIC_ARROW;
-			else if (tname =="fire_bolt") type = Projectile::FIRE_BOLT;
-			else if (tname =="fire_ball") type = Projectile::FIRE_BALL ;
-			else if (tname =="fire_wall") type = Projectile::FIRE_WALL;
-			else if (tname =="fire_wave") type = Projectile:: FIRE_WAVE;
-			else if (tname =="ice_bolt") type = Projectile::ICE_BOLT;
-			else if (tname =="blizzard") type = Projectile::BLIZZARD;
-			else if (tname =="ice_ring") type = Projectile:: ICE_RING;
-			else if (tname =="freeze") type = Projectile:: FREEZE;
-			else if (tname =="lightning") type = Projectile::LIGHTNING;
-			else if (tname =="thunderstorm") type = Projectile:: THUNDERSTORM ;
-			else if (tname =="chain_lightning") type = Projectile::CHAIN_LIGHTNING;
-			else if (tname =="static_shield") type = Projectile::STATIC_SHIELD;
-			else if (tname =="fire_arrow") type = Projectile::FIRE_ARROW;
-			else if (tname =="ice_arrow") type = Projectile::ICE_ARROW ;
-			else if (tname =="wind_arrow") type = Projectile::WIND_ARROW;
-			else if (tname =="guided_arrow") type = Projectile::GUIDED_ARROW;
-			else if (tname =="explosion") type = Projectile::EXPLOSION;
-			else if (tname =="fire_explosion") type = Projectile:: FIRE_EXPLOSION;
-			else if (tname =="ice_explosion") type = Projectile::ICE_EXPLOSION;
-			else if (tname =="wind_explosion") type = Projectile::WIND_EXPLOSION;
-			else if (tname =="light_beam") type = Projectile:: LIGHT_BEAM ;
-			else if (tname =="elem_explosion") type = Projectile::ELEM_EXPLOSION;
-			else if (tname =="acid") type = Projectile:: ACID;
-			else if (tname =="divine_beam") type = Projectile::DIVINE_BEAM;
-			else if (tname =="hypnosis") type = Projectile::HYPNOSIS;
-
 			// Schaden
 			Damage* dmg = &(m_region->getDamageObject(dmgname));
 
 			// Projektil erzeugen
-			Projectile* pr = new Projectile(type, dmg, World::getWorld()->getValidProjectileId());
+			Projectile* pr = new Projectile(tname, dmg, World::getWorld()->getValidProjectileId());
 
 			// Richtung, Geschwindigkeit ermitteln
 			if (argc>=4 && (lua_istable(L,4) || lua_isstring(L,4)))

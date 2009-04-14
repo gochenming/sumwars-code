@@ -9,7 +9,7 @@
 #define USE_OBJECTLOADER
 #define USE_ITEMLOADER
 
-std::map<Projectile::ProjectileType, RenderInfo> Scene::m_projectile_render_info;
+std::map<Projectile::Subtype, RenderInfo> Scene::m_projectile_render_info;
 
 std::map<GameObject::Subtype, RenderInfo> Scene::m_object_render_info;
 
@@ -214,33 +214,33 @@ void Scene::registerMeshes()
 	registerObject("stones3","stones3.mesh","");
 
 	// Geschosse
-	registerProjectile(Projectile::ARROW,"arrow.mesh","");
-	registerProjectile(Projectile::MAGIC_ARROW,"","Magic_Arrow");
-	registerProjectile(Projectile::FIRE_BOLT,"","Firebolt");
-	registerProjectile(Projectile::FIRE_BALL,"","Fireball");
-	registerProjectile(Projectile::FIRE_WALL,"","Firewall");
-	registerProjectile(Projectile::FIRE_WAVE,"","Firewave");
-	registerProjectile(Projectile::ICE_BOLT,"","Icebolt");
-	registerProjectile(Projectile::BLIZZARD,"","Blizzard");
-	registerProjectile(Projectile::ICE_RING,"","Icering");
-	registerProjectile(Projectile::FREEZE,"","Freeze");
-	registerProjectile(Projectile::LIGHTNING,"","Lightning");
-	registerProjectile(Projectile::THUNDERSTORM,"","Thunderstorm");
-	registerProjectile(Projectile::CHAIN_LIGHTNING,"","Chainlightning");
-	registerProjectile(Projectile::STATIC_SHIELD,"","Static_Shield");
-	registerProjectile(Projectile::FIRE_ARROW,"arrow.mesh","Fire_Arrow");
-	registerProjectile(Projectile::ICE_ARROW ,"arrow.mesh","Ice_Arrow");
-	registerProjectile(Projectile::WIND_ARROW,"arrow.mesh","Wind_Arrow");
-	registerProjectile(Projectile::GUIDED_ARROW,"arrow.mesh","Guided_Arrow");
-	registerProjectile(Projectile::EXPLOSION,"","Explosion");
-	registerProjectile(Projectile::FIRE_EXPLOSION,"","Fire_Explosion");
-	registerProjectile(Projectile::ICE_EXPLOSION,"","Ice_Explosion");
-	registerProjectile(Projectile::WIND_EXPLOSION,"","Wind_Explosion");
-	registerProjectile(Projectile::LIGHT_BEAM,"","Lightbeam");
-	registerProjectile(Projectile::ELEM_EXPLOSION,"","ElemExplosion");
-	registerProjectile(Projectile::ACID,"","Acid");
-	registerProjectile(Projectile::DIVINE_BEAM,"","Divine_Beam");
-	registerProjectile(Projectile::HYPNOSIS,"","Hypnosis");
+	registerProjectile("ARROW","arrow.mesh","");
+	registerProjectile("MAGIC_ARROW","","Magic_Arrow");
+	registerProjectile("FIRE_BOLT","","Firebolt");
+	registerProjectile("FIRE_BALL","","Fireball");
+	registerProjectile("FIRE_WALL","","Firewall");
+	registerProjectile("FIRE_WAVE","","Firewave");
+	registerProjectile("ICE_BOLT","","Icebolt");
+	registerProjectile("BLIZZARD","","Blizzard");
+	registerProjectile("ICE_RING","","Icering");
+	registerProjectile("FREEZE","","Freeze");
+	registerProjectile("LIGHTNING","","Lightning");
+	registerProjectile("THUNDERSTORM","","Thunderstorm");
+	registerProjectile("CHAIN_LIGHTNING","","Chainlightning");
+	registerProjectile("STATIC_SHIELD","","Static_Shield");
+	registerProjectile("FIRE_ARROW","arrow.mesh","Fire_Arrow");
+	registerProjectile("ICE_ARROW" ,"arrow.mesh","Ice_Arrow");
+	registerProjectile("WIND_ARROW","arrow.mesh","Wind_Arrow");
+	registerProjectile("GUIDED_ARROW","arrow.mesh","Guided_Arrow");
+	registerProjectile("EXPLOSION","","Explosion");
+	registerProjectile("FIRE_EXPLOSION","","Fire_Explosion");
+	registerProjectile("ICE_EXPLOSION","","Ice_Explosion");
+	registerProjectile("WIND_EXPLOSION","","Wind_Explosion");
+	registerProjectile("LIGHT_BEAM","","Lightbeam");
+	registerProjectile("ELEM_EXPLOSION","","ElemExplosion");
+	registerProjectile("ACID","","Acid");
+	registerProjectile("DIVINE_BEAM","","Divine_Beam");
+	registerProjectile("HYPNOSIS","","Hypnosis");
 
 
 	registerItem("gold","gold.mesh");
@@ -284,7 +284,7 @@ void Scene::registerItem(Item::Subtype subtype, std::string mesh, std::string pa
 
 
 
-void Scene::registerProjectile(Projectile::ProjectileType type, std::string mesh, std::string particle_system, float scaling_factor)
+void Scene::registerProjectile(Projectile::Subtype type, std::string mesh, std::string particle_system, float scaling_factor)
 {
 	m_projectile_render_info.insert(std::make_pair(type,RenderInfo(mesh,particle_system,scaling_factor)));
 }
@@ -332,9 +332,9 @@ RenderInfo  Scene::getItemRenderInfo(Item::Subtype subtype)
 	}
 }
 
-RenderInfo  Scene::getProjectileRenderInfo(Projectile::ProjectileType type)
+RenderInfo  Scene::getProjectileRenderInfo(Projectile::Subtype type)
 {
-	std::map<Projectile::ProjectileType, RenderInfo>::iterator i= m_projectile_render_info.find(type);
+	std::map<Projectile::Subtype, RenderInfo>::iterator i= m_projectile_render_info.find(type);
 	if (i != m_projectile_render_info.end())
 	{
 		return i->second;
@@ -1345,7 +1345,7 @@ void Scene::createProjectile(Projectile* pr, std::string& name)
 	Ogre::SceneNode* obj_node;
 	obj_node =m_scene_manager->getRootSceneNode()->createChildSceneNode(node_name,vec);
 
-	Projectile::ProjectileType type = pr->getType();
+	Projectile::Subtype type = pr->getType();
 	Ogre::Entity *ent =0;
 	//Partikelsystem anlegen
 	std::string particle_name = name + "Particle";

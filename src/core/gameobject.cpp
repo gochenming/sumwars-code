@@ -58,10 +58,17 @@ Region* GameObject::getRegion()
 	return World::getWorld()->getRegion(m_region_id);
 }
 
-void GameObject::setSpeed(Vector speed)
+void GameObject::setSpeed(Vector speed, bool throwevent)
 {
 	m_speed =speed;
-	m_event_mask |= NetEvent::DATA_SPEED;
+	if (m_speed.m_x !=0 || m_speed.m_y !=0)
+	{
+		getShape()->m_angle = m_speed.angle();
+	}
+	if (throwevent)
+	{
+		m_event_mask |= NetEvent::DATA_SPEED;
+	}
 }
 
 void GameObject::setAngle(float angle)
@@ -142,7 +149,7 @@ string GameObject::getNameId()
 
 void GameObject::writeNetEvent(NetEvent* event, CharConv* cv)
 {
-	/*
+	
 	if (event->m_data & NetEvent::DATA_TYPE)
 	{
 		cv->toBuffer(m_type);
@@ -168,12 +175,12 @@ void GameObject::writeNetEvent(NetEvent* event, CharConv* cv)
 		cv->toBuffer(m_shape.m_angle);
 	}
 	
+	/*
 	if (event->m_data & NetEvent::DATA_STATE)
 	{
 		cv->toBuffer((char) getState());
 	}
-	*/
-	/*
+	
 	if (event->m_data & NetEvent::DATA_SPEED)
 	{
 		cv->toBuffer(getSpeed().m_x);
@@ -184,7 +191,7 @@ void GameObject::writeNetEvent(NetEvent* event, CharConv* cv)
 
 void GameObject::processNetEvent(NetEvent* event, CharConv* cv)
 {
-	/*
+	
 	if (event->m_data & NetEvent::DATA_TYPE)
 	{
 		cv->fromBuffer(m_type);
@@ -215,6 +222,7 @@ void GameObject::processNetEvent(NetEvent* event, CharConv* cv)
 		cv->fromBuffer<float>(m_shape.m_angle);
 	}
 	
+	/*
 	if (event->m_data & NetEvent::DATA_STATE)
 	{
 		char ctmp;
@@ -222,8 +230,7 @@ void GameObject::processNetEvent(NetEvent* event, CharConv* cv)
 		setState((State) ctmp);
 		DEBUG5("object %i changed state to %i",getId(),ctmp);
 	}
-	*/
-	/*
+	
 	if (event->m_data & NetEvent::DATA_SPEED)
 	{
 		cv->fromBuffer(m_speed.m_x);
