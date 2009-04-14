@@ -880,6 +880,8 @@ void Projectile::handleStable(float dtime)
 
 void Projectile::toString(CharConv* cv)
 {
+	GameObject::toString(cv);
+	
 	cv->toBuffer((char) getFraction());
 	cv->toBuffer(m_timer);
 	cv->toBuffer(m_timer_limit);
@@ -893,8 +895,8 @@ void Projectile::toString(CharConv* cv)
 
 void Projectile::fromString(CharConv* cv)
 {
-	// Typ und ID werden schon vorher eingelesen..
-
+	GameObject::fromString(cv);
+	
 	char tmp;
 	cv->fromBuffer<char>(tmp);
 	m_fraction = (WorldObject::Fraction) tmp;

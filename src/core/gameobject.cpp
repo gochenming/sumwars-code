@@ -61,7 +61,7 @@ Region* GameObject::getRegion()
 void GameObject::setSpeed(Vector speed, bool throwevent)
 {
 	m_speed =speed;
-	if (m_speed.m_x !=0 || m_speed.m_y !=0)
+	if (m_speed.getLength() >0.001f)
 	{
 		getShape()->m_angle = m_speed.angle();
 	}

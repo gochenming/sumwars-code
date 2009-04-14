@@ -1303,7 +1303,7 @@ void Scene::updateProjectiles()
 
 		if (pr->getTimer()<200)
 		{
-			SoundTarget target = SoundSystem::getProjectileSound(pr->getType());
+			SoundTarget target = SoundSystem::getProjectileSound(pr->getSubtype());
 			SoundName sound;
 			sound = SoundSystem::getSoundName(target);
 			SoundObject* obj = SoundSystem::getSoundObject(name);
@@ -1345,7 +1345,7 @@ void Scene::createProjectile(Projectile* pr, std::string& name)
 	Ogre::SceneNode* obj_node;
 	obj_node =m_scene_manager->getRootSceneNode()->createChildSceneNode(node_name,vec);
 
-	Projectile::Subtype type = pr->getType();
+	Projectile::Subtype type = pr->getSubtype();
 	Ogre::Entity *ent =0;
 	//Partikelsystem anlegen
 	std::string particle_name = name + "Particle";

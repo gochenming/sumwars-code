@@ -979,6 +979,7 @@ void Region::createMonsterGroup(MonsterGroupName mgname, Vector position, float 
 
 bool  Region::insertProjectile(Projectile* object, Vector pos)
 {
+	DEBUG5("projectile inserted: %s %i",object->getSubtype().c_str(), object->getId());
 	m_projectiles->insert(std::make_pair(object->getId(),object));
 	object->getShape()->m_center = pos;
 	object->setRegionId( m_id);
@@ -1168,6 +1169,7 @@ void Region::deleteProjectile(Projectile* proj)
 	if (m_projectiles->count(id)!=0)
 	{
 		m_projectiles->erase(m_projectiles->find(id));
+		DEBUG5("projectile deleted: %s %i",proj->getSubtype().c_str(), proj->getId());
 	}
 }
 
@@ -1241,7 +1243,7 @@ void Region::update(float time)
 				event.m_id = pr->getId();
 				insertNetEvent(event);
 
-				DEBUG5("deleting projectile %p",pr);
+				DEBUG5("deleting projectile %i",pr->getId());
 				m_projectiles->erase(it3++);
 				delete pr;
 				DEBUG5("loesche projektil");
