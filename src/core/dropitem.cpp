@@ -1,4 +1,5 @@
 #include "dropitem.h"
+#include "itemfactory.h"
 
 DropItem::DropItem(int id)
 	: GameObject(id)
@@ -48,7 +49,26 @@ void DropItem::toString(CharConv* cv)
 
 void DropItem::fromString(CharConv* cv)
 {
-	GameObject::toString(cv);
+	GameObject::fromString(cv);
+	
+	int id;
+	Item::Subtype subtype;
+	char type;
+	
+	cv->fromBuffer(type);
+	cv->fromBuffer(subtype);
+	cv->fromBuffer(id);
+	
+	if (id != getId())
+	{
+		ERRORMSG("inconsistent dropitem: id %i item id %i",getId(), id);
+	}
+	
+	if (m_item != 0)
+		delete m_item;
+	
+	
+	m_item = ItemFactory::createItem((Item::Type) type, subtype,id);
 	m_item->fromString(cv);
 }
 

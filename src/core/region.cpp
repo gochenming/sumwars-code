@@ -1658,6 +1658,8 @@ void Region::createItemFromString(CharConv* cv)
 	cv->fromBuffer(subt);
 	cv->fromBuffer(id);
 	
+	DEBUG5("got Item %i %s %s",id,type.c_str(),subt.c_str());
+	
 	DropItem* di = new DropItem(id);
 	di->fromString(cv);
 

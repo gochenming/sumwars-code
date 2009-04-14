@@ -1656,7 +1656,7 @@ bool World::writeNetEvent(Region* region,NetEvent* event, CharConv* cv)
 				}
 				cv->toBuffer<short>((short) event->m_data);
 				static_cast<Player*>(object)->getEquipement()->getItem(event->m_data)->toStringComplete(cv);
-				DEBUG("player item insert");
+				DEBUG5("player item insert");
 			}
 			else
 			{
@@ -1670,7 +1670,7 @@ bool World::writeNetEvent(Region* region,NetEvent* event, CharConv* cv)
 
 	if (event->m_type ==  NetEvent::ITEM_REMOVED)
 	{
-		DEBUG("removing item %i",event->m_id);
+		DEBUG5("removing item %i",event->m_id);
 	}
 
 	if (event->m_type == NetEvent::PLAYER_PARTY_CHANGED)
