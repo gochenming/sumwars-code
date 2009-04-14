@@ -430,7 +430,8 @@ struct NetEvent
 		DATA_TYPE = 0x1,
 		DATA_SHAPE = 0x2,
 		DATA_STATE = 0x4,
-		DATA_SPEED = 0x8
+		DATA_SPEED = 0x8,
+		DATA_TIMER = 0x10,
 	};
 	
 	/**
@@ -444,7 +445,7 @@ struct NetEvent
 		DATA_HP = 0x400,
 		DATA_EFFECTS = 0x800,
 		DATA_STATUS_MODS = 0x1000,
-		DATA_TIMER = 0x2000,
+		
 		DATA_ATTACK_WALK_SPEED = 0x4000,
 		DATA_NEXT_COMMAND = 0x8000,
 		DATA_ABILITIES = 0x10000,
@@ -466,11 +467,8 @@ struct NetEvent
 	 */
 	enum ProjectileData
 	{
-		DATA_GEOMETRY = 0x1,
-		DATA_PROJ_STATE = 0x4,
-		DATA_GOAL_OBJECT = 0x8,
-		DATA_PROJ_TIMER = 0x20,
-		DATA_MAX_RADIUS = 0x40,
+		DATA_GOAL_OBJECT = 0x100,
+		DATA_MAX_RADIUS = 0x200,
 	};
 	
 	/**

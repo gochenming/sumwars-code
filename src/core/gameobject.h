@@ -47,17 +47,24 @@ class GameObject
 		enum State
 		{
 			STATE_INACTIVE=0,
-		STATE_ACTIVE =1,
-		STATE_DIEING =2,
-		STATE_DEAD =3,
-		STATE_REGION_DATA_REQUEST=6,
-		STATE_REGION_DATA_WAITING=4,
-		STATE_ENTER_REGION =5,
-		STATE_QUIT=9,
-		STATE_STATIC = 10,
-		STATE_SPEAK= 20,
-		STATE_NONE = 30,
-		STATE_AUTO = 31,
+			STATE_ACTIVE =1,
+			STATE_DIEING =2,
+			STATE_DEAD =3,
+			STATE_REGION_DATA_REQUEST=6,
+			STATE_REGION_DATA_WAITING=4,
+			STATE_ENTER_REGION =5,
+			STATE_QUIT=9,
+			STATE_STATIC = 10,
+			STATE_SPEAK= 20,
+			STATE_NONE = 30,
+			STATE_AUTO = 31,
+  
+			STATE_FLYING = 41,
+			STATE_EXPLODING = 42,
+			STATE_GROWING = 43,
+			STATE_STABLE = 44,
+			STATE_VANISHING =45,
+			STATE_DESTROYED= 46
 		};
 		
 		/**
@@ -69,6 +76,24 @@ class GameObject
 			WORLDOBJECT =1,
 			PROJECTILE = 2,
 			DROPITEM = 3,
+		};
+		
+		/**
+		 * \enum Fraction
+		 * \brief Parteien fuer die Lebewesen kaempfen koennen
+		 */
+		enum Fraction
+		{
+			NOFRACTION = 0,
+			FRAC_HUMAN = 1,
+			FRAC_DEMON = 2,
+			FRAC_UNDEAD = 3,
+			FRAC_DWARF = 4,
+			FRAC_SUMMONER = 5,
+			FRAC_MONSTER = 6,
+			FRAC_NEUTRAL_TO_ALL =8,
+			FRAC_HOSTILE_TO_ALL=9,
+			FRAC_PLAYER_PARTY = 10,
 		};
 		
 		
@@ -305,11 +330,12 @@ class GameObject
 		}
 		
 		/**
-		 * \fn setSpeed(Vector speed)
+		 * \fn setSpeed(Vector speed, bool throwevent = true)
 		 * \brief Setzt die Geschwindigkeit des Objektes
 		 * \param speed neue Geschwindigkeit
+		 * \param throwevent Wenn auf true gesetzt, wird die Richtung ueber das Netzwerk ausgetauscht
 		 */
-		void setSpeed(Vector speed);
+		void setSpeed(Vector speed, bool throwevent = true);
 		
 		/**
 		 * \fn void toString(CharConv* cv)

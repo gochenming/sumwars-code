@@ -981,7 +981,7 @@ bool  Region::insertProjectile(Projectile* object, Vector pos)
 {
 	m_projectiles->insert(std::make_pair(object->getId(),object));
 	object->getShape()->m_center = pos;
-	object->setRegion( m_id);
+	object->setRegionId( m_id);
 
 	// NetEvent erzeugen: neues Projektil in der Region
 	NetEvent event;
@@ -1231,7 +1231,7 @@ void Region::update(float time)
 	for (it3 = m_projectiles->begin(); it3 !=m_projectiles->end();)
 	{
 		pr = (it3->second);
-		if (pr->getState() == Projectile::DESTROYED)
+		if (pr->getState() == Projectile::STATE_DESTROYED)
 		{
 			// Projektile selbststaendig loeschen darf nur der Server
 			if (World::getWorld()->isServer())
@@ -1629,16 +1629,18 @@ void Region::createObjectFromString(CharConv* cv, WorldObjectMap* players)
 void Region::createProjectileFromString(CharConv* cv)
 {
 
-	char type,frac;
+	GameObject::Type type;
+	GameObject::Subtype subt;
 	int id;
 	Projectile* proj;
 
 	cv->fromBuffer(type);
+	cv->fromBuffer(subt);
 	cv->fromBuffer(id);
 
-	DEBUG5("new projectile %i frac %i id %i",type,frac,id);
+	DEBUG5("new projectile %s  id %i",subt.c_str(),id);
 
-	proj = new Projectile((Projectile::ProjectileType) type,0, id);
+	proj = new Projectile(subt,0, id);
 
 	proj->fromString(cv);
 
