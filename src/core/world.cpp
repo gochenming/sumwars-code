@@ -1125,6 +1125,7 @@ void World::updatePlayers()
 			ClientDataRequest datareq;
 			datareq.m_data = ClientDataRequest::REGION_ALL;
 			datareq.m_id = pl->getRegionId();
+			datareq.m_region_id = pl->getRegionId();
 
 			CharConv msg;
 			header.toString(&msg);
@@ -1149,6 +1150,20 @@ void World::updatePlayers()
 		// Daten von allen verbundenen Client annehmen und verarbeiten
 		if (m_server && slot != LOCAL_SLOT)
 		{
+			// Daten abgleichen
+			if (pl->getState() == WorldObject::STATE_ACTIVE && pl->getRegion() !=0 && m_timer_limit[6])
+			{
+				CharConv cv;
+				PackageHeader header;
+				header.m_content = PTYPE_S2C_DATA_CHECK;
+				
+				header.toString(&cv);
+				
+				pl->getRegion()->getRegionCheckData(&cv);
+				
+				m_network->pushSlotMessage(cv.getBitStream(),slot);
+			}
+			
 			// Nachrichten fuer die Spieler abholen und Verteilen
 			PackageHeader headerp;
 			Packet* data;
@@ -1414,6 +1429,14 @@ void World::updatePlayers()
 					EventSystem::doString(chunk.c_str());
 				}
 
+				if (headerp.m_content == PTYPE_S2C_DATA_CHECK)
+				{
+					if (m_local_player->getRegion() !=0)
+					{
+						m_local_player->getRegion() ->	checkRegionData(cv);
+					}
+				}
+				
 				delete cv;
 			}
 
@@ -2119,12 +2142,12 @@ void World::handleDataRequest(ClientDataRequest* request, int slot )
 	{
 		player = (*m_player_slots)[slot];
 	}
-
+	
+	Region* region = getRegion(request->m_region_id);
 	if (request->m_data <= ClientDataRequest::REGION_ALL)
 	{
 		DEBUG5("Daten zur Region %i gefordert",request->m_id);
-		Region* region = getRegion(request->m_id);
-
+		
 		if (region!=0)
 		{
 			// Daten der Region senden
@@ -2144,6 +2167,43 @@ void World::handleDataRequest(ClientDataRequest* request, int slot )
 		}
 
 	}
+	else if (request->m_data == ClientDataRequest::ITEM)
+	{
+		if (region!=0)
+		{
+			// Daten werden per Event aktualisiert
+			NetEvent event;
+			event.m_type = NetEvent::ITEM_DROPPED;
+			event.m_id = request->m_id;
+
+			region->insertNetEvent(event);
+		}
+	}
+	else if (request->m_data == ClientDataRequest::OBJECT)
+	{
+		if (region!=0)
+		{
+			// Daten werden per Event aktualisiert
+			NetEvent event;
+			event.m_type = NetEvent::OBJECT_CREATED;
+			event.m_id = request->m_id;
+
+			region->insertNetEvent(event);
+		}
+	}
+	else if (request->m_data == ClientDataRequest::PROJECTILE)
+	{
+		if (region!=0)
+		{
+			// Daten werden per Event aktualisiert
+			NetEvent event;
+			event.m_type = NetEvent::PROJECTILE_CREATED;
+			event.m_id = request->m_id;
+
+			region->insertNetEvent(event);
+		}
+	}
+	
 }
 
 bool World::calcBlockmat(PathfindInfo * pathinfo)

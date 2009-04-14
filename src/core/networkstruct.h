@@ -122,6 +122,11 @@ enum PackageType
    	* \brief Position der Wegpunkte
    	*/
   	PTYPE_S2C_WAYPOINTS,
+   
+   /**
+    * \brief Daten zum Pruefung der Synchronisation
+    */
+   PTYPE_S2C_DATA_CHECK,
 };
 
 /**
@@ -156,6 +161,12 @@ struct ClientDataRequest
 	 * \brief ID des geforderten Objektes
 	 */
 	int m_id;
+	
+	/**
+	 * \var short m_region_id
+	 * \brief Id der Region
+	*/
+	short m_region_id;
 
 	/**
 	 * \fn void toString(CharConv* cv)
@@ -166,6 +177,7 @@ struct ClientDataRequest
 	{
 		cv->toBuffer((char) m_data);
 		cv->toBuffer(m_id);
+		cv->toBuffer(m_region_id);
 	}
 
 
@@ -180,6 +192,7 @@ struct ClientDataRequest
 		cv->fromBuffer(tmp);
 		m_data = (Data) tmp;
 		cv->fromBuffer(m_id);
+		cv->fromBuffer(m_region_id);
 	}
 };
 
@@ -482,6 +495,8 @@ struct NetEvent
 	 * \brief ID des Objektes, das das Ereignis erzeugt hat
 	 */
 	int m_id;
+	
+
 		
 	/**
 	 * \fn void toString(CharConv* cv)
