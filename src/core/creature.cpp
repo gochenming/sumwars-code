@@ -4058,6 +4058,7 @@ void Creature::writeNetEvent(NetEvent* event, CharConv* cv)
 		cv->toBuffer(getShape()->m_center.m_y);
 		cv->toBuffer(getShape()->m_angle);
 
+		DEBUG5("sending action %i angle %f",m_action.m_type, getShape()->m_angle);
 		if (m_action.m_type!=0)
 		{
 			float acttime = m_action.m_time - m_action.m_elapsed_time;
@@ -4210,7 +4211,7 @@ void Creature::processNetEvent(NetEvent* event, CharConv* cv)
 	bool newact= false;
 	bool newmove = false;
 	float delay = cv->getDelay();
-	float newangle=0;
+	float newangle=getShape()->m_angle;
 
 	if (delay>1000)
 	{
@@ -4321,7 +4322,10 @@ void Creature::processNetEvent(NetEvent* event, CharConv* cv)
 	{
 		cv->fromBuffer(newspeed.m_x);
 		cv->fromBuffer(newspeed.m_y);
-		newmove = true;
+		if (newspeed.getLength() > 0.001f)
+		{
+			newmove = true;
+		}
 
 	}
 
@@ -4419,8 +4423,7 @@ void Creature::processNetEvent(NetEvent* event, CharConv* cv)
 	{
 
 		m_action.m_elapsed_time += delay;
-
-
+		
 		if (m_action.m_elapsed_time> m_action.m_time)
 		{
 			// Aktion sollte schon beenden sein
@@ -4442,15 +4445,9 @@ void Creature::processNetEvent(NetEvent* event, CharConv* cv)
 				// Wenn die Aktion nicht laufen ist, Spieler an die richtige Position versetzen
 				moveTo(newpos);
 				getShape()->m_angle = newangle;
+				
 			}
-			/*
-			if (Action::getActionInfo(m_action.m_type)->m_distance != Action::SELF)
-			{
-
-				getShape()->m_angle = (m_action.m_goal - newpos).angle();
-
-			}
-			*/
+			
 			if (Action::getActionInfo(m_action.m_type)->m_base_action == Action::WALK)
 			{
 				setAngle(getSpeed().angle());
