@@ -1844,7 +1844,7 @@ void Creature::calcAction()
 		}
 		else
 		{
-			Vector pos(di->m_x/2.0, di->m_y / 2.0);
+			Vector pos = di->getPosition();
 			goal = pos;
 			dist = getShape()->m_center.distanceTo(pos);
 		}

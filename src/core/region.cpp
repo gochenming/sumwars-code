@@ -156,7 +156,8 @@ Region::~Region()
 	DropItemMap::iterator k;
 	for (k =  m_drop_items->begin(); k != m_drop_items->end(); k++)
 	{
-		delete k->second->m_item;
+		if (k->second->getItem() !=0)
+			delete k->second->getItem();
 		delete k->second;
 	}
 	
@@ -1562,9 +1563,7 @@ void Region::getRegionData(CharConv* cv)
 	DropItemMap::iterator lt;
 	for (lt = m_drop_items->begin(); lt != m_drop_items->end(); ++lt)
 	{
-		cv->toBuffer(lt->second->m_x);
-		cv->toBuffer(lt->second->m_y);
-		lt->second->m_item->toString(cv);
+		lt->second->toString(cv);
 	}
 	
 	// Cutscene modus
@@ -1651,30 +1650,19 @@ void Region::createProjectileFromString(CharConv* cv)
 
 void Region::createItemFromString(CharConv* cv)
 {
-	char type;
-	std::string subtype;
-	Item* item;
+	GameObject::Type type;
+	GameObject::Subtype subt;
 	int id;
-	short sx,sy;
-	cv->fromBuffer(sx);
-	cv->fromBuffer(sy);
-
-	cv->fromBuffer<char>(type);
-	cv->fromBuffer(subtype);
+	
+	cv->fromBuffer(type);
+	cv->fromBuffer(subt);
 	cv->fromBuffer(id);
-
-	item = ItemFactory::createItem((Item::Type) type, subtype,id);
-	item->fromString(cv);
-
-	DropItem* di = new DropItem;
-	di->m_item = item;
-	di->m_x = sx;
-	di->m_y = sy;
-	DEBUG5("dropped item %i at %i %i", id,sx,sy);
-	di->m_time = 0;
+	
+	DropItem* di = new DropItem(id);
+	di->fromString(cv);
 
 	m_drop_items->insert(std::make_pair(id,di));
-	m_drop_item_locations->insert(std::make_pair(sx*10000+sy,di));
+	m_drop_item_locations->insert(std::make_pair(di->getLocationId(),di));
 
 }
 
@@ -1787,7 +1775,89 @@ void Region::setRegionData(CharConv* cv,WorldObjectMap* players)
 	
 }
 
+void Region::getRegionCheckData(CharConv* cv)
+{
+	// Anzahl der statischen Objekte eintragen
+	DEBUG5("static objects: %i",m_static_objects->size());
+	cv->toBuffer<short>((short) m_static_objects->size());
 
+	// statische Objekte in den Puffer eintragen
+	WorldObjectMap::iterator it;
+	for (it = m_static_objects->begin();it!=m_static_objects->end();++it)
+	{
+		cv->toBuffer((it->second)->getId());
+		DEBUG5("static object: %s",(it->second)->getNameId().c_str());
+	}
+
+
+	// Anzahl der nicht  statischen Objekte eintragen
+	WorldObjectMap::iterator jt;
+	short nr=0;
+	for (jt = m_objects->begin();jt!=m_objects->end();++jt)
+	{
+		if (jt->second->getLayer() != WorldObject::LAYER_SPECIAL)
+			nr++;
+	}
+	DEBUG5("nonstatic objects: %i",nr);
+	cv->toBuffer<short>((short) nr);
+
+	// nicht statische Objekte in den Puffer eintragen
+
+	for (jt = m_objects->begin();jt!=m_objects->end();++jt)
+	{
+		if (jt->second->getLayer() != WorldObject::LAYER_SPECIAL)
+		{
+			cv->toBuffer((jt->second)->getId());
+			DEBUG5("object: %s",(jt->second)->getNameId().c_str());
+		}
+	}
+
+	// Anzahl der Projektile eintragen
+	cv->toBuffer<short>((short) m_projectiles->size());
+	DEBUG5("projectiles: %i",m_projectiles->size());
+
+	// Projektile in den Puffer eintragen
+	ProjectileMap::iterator kt;
+	for (kt = m_projectiles->begin(); kt != m_projectiles->end(); ++kt)
+	{
+		cv->toBuffer((kt->second)->getId());
+	}
+
+	cv->toBuffer<short>((short) m_drop_items->size());
+	DEBUG5("dropped items: %i",m_drop_items->size());
+
+	//  Items in den Puffer eintragen
+	DropItemMap::iterator lt;
+	for (lt = m_drop_items->begin(); lt != m_drop_items->end(); ++lt)
+	{
+		cv->toBuffer((lt->second)->getId());
+	}
+	
+	// Cutscene modus
+	cv->toBuffer(m_cutscene_mode);
+}
+
+void Region::checkRegionData(CharConv* cv)
+{
+	short nr;
+	std::set<int> objects;
+	int id;
+	
+	cv->fromBuffer(nr);
+	DEBUG("static Objects %i",nr);
+	for (int i=0; i<nr; i++)
+	{
+		cv->fromBuffer(id);
+		objects.insert(id);
+		
+		if (m_static_objects->count(id) ==0)
+		{
+			// Objekt fehlt beim Client
+		}
+	}
+	
+	
+}
 
 void Region::setTile(Tile tile,short x, short y)
 {
@@ -1857,24 +1927,21 @@ bool  Region::dropItem(Item* item, Vector pos)
 			DEBUG5("field is free");
 			// Stelle ist frei
 			// Item einfuegen
-			DropItem* di = new DropItem;
-			di->m_item = item;
-			di->m_x = (short) sx;
-			di->m_y = (short) sy;
+			DropItem* di = new DropItem(item);
+			di->setPosition(Vector(sx/2.0f, sy/2.0f));
 			DEBUG5("dropped item %i", sx*10000+sy);
-			di->m_time = 0;
-
-			m_drop_items->insert(std::make_pair(di->m_item->m_id,di));
+			
+			m_drop_items->insert(std::make_pair(di->getId(),di));
 			m_drop_item_locations->insert(std::make_pair(i,di));
 
 
-			DEBUG5("items dropped at %i %i",sx,sy);
+			DEBUG5("items dropped at %f %f locID %i %p",sx/2.0f,sy/2.0f, di->getLocationId(),item);
 
 			if (World::getWorld()->isServer())
 			{
 				NetEvent event;
 				event.m_type = NetEvent::ITEM_DROPPED;
-				event.m_id = di->m_item->m_id;
+				event.m_id = di->getId();
 
 				insertNetEvent(event);
 			}
@@ -1957,8 +2024,8 @@ bool Region::dropItem(Item::Subtype subtype, Vector pos, int magic_power)
 Item*  Region::getItemAt(Vector pos)
 {
 	DropItemMap::iterator it;
-	short sx = (int) (pos.m_x*2);
-	short sy = (int) (pos.m_y*2);
+	short sx = (int) (pos.m_x*2 + 0.5);
+	short sy = (int) (pos.m_y*2 + 0.5);
 	int id = sx*10000 + sy;
 
 	it = m_drop_item_locations->find(id);
@@ -1968,7 +2035,7 @@ Item*  Region::getItemAt(Vector pos)
 	}
 	else
 	{
-		return it->second->m_item;
+		return it->second->getItem();
 	}
 }
 
@@ -1982,7 +2049,7 @@ Item* Region::getItem(int id)
 	}
 	else
 	{
-		return it->second->m_item;
+		return it->second->getItem();
 	}
 }
 
@@ -2014,17 +2081,17 @@ bool Region::deleteItem(int id, bool delitem)
 	else
 	{
 		// Item Wrapper loeschen
-		int pos = 10000* it->second->m_x + it->second->m_y;
+		int pos = it->second->getLocationId();
 		it2 = m_drop_item_locations->find(pos);
 
 		NetEvent event;
 		event.m_type = NetEvent::ITEM_REMOVED;
-		event.m_id = it->second->m_item->m_id;
+		event.m_id = it->second->getId();
 		insertNetEvent(event);
 
 		if (delitem)
 		{
-			delete it->second->m_item;
+			delete it->second->getItem();
 		}
 		delete (it->second);
 
