@@ -1169,6 +1169,9 @@ bool Player::onClientCommand( ClientCommand* command, float delay)
 			break;
 
 		case BUTTON_LEAVE:
+			if (World::getWorld()->isCooperative())
+				break;
+			
 			if (getParty()->getNrMembers() ==1)
 			{
 				if (m_candidate_party >=0)
