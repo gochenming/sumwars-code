@@ -689,15 +689,18 @@ void Creature::performActionCritPart(Vector goal, WorldObject* goalobj)
 	switch(m_action.m_type)
 	{
 		case Action::SPEAK:
-			if (goalobj->isCreature() && getDialogue() ==0)
+			if (goalobj->isCreature() && getDialogueId() ==0)
 			{
 				cr = static_cast<Creature*>(goalobj);
-				Dialogue* dia = new Dialogue(getRegion(), cr->getRefName());
-				EventSystem::setDialogue(dia);
-				dia->addSpeaker(getId(),"player");
-				dia->addSpeaker(goalobj->getId(),cr->getRefName());
-				dia->changeTopic("start");
-				getRegion()->insertDialogue(dia);
+				if (cr->getDialogueId() ==0)
+				{
+					Dialogue* dia = new Dialogue(getRegion(), cr->getRefName());
+					EventSystem::setDialogue(dia);
+					dia->addSpeaker(getId(),"player");
+					dia->addSpeaker(goalobj->getId(),cr->getRefName());
+					dia->changeTopic("start");
+					getRegion()->insertDialogue(dia);
+				}
 			}
 			
 			break;
@@ -4602,6 +4605,7 @@ void Creature::setDialogue(int id)
 {
 	if (id != m_dialogue_id)
 	{
+		DEBUG5("Creature %s has now Dialogue %i",getRefName().c_str(),id);
 		m_dialogue_id = id;
 		addToNetEventMask(NetEvent::DATA_DIALOGUE);
 		
