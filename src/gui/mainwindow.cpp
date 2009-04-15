@@ -2015,7 +2015,7 @@ void MainWindow::updatePartyInfo()
 	std::ostringstream stream;
 	
 	int i=0;
-	if (!( windows & Document::PARTY || windows & Document::CHARINFO)) 
+	if (!( windows & Document::PARTY || windows & Document::CHARINFO || windows & Document::QUEST_INFO)) 
 	{
 		float hperc;
 		Player* player = m_document->getLocalPlayer();
