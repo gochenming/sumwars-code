@@ -240,3 +240,8 @@ void GameObject::processNetEvent(NetEvent* event, CharConv* cv)
 	*/
 }
 
+
+void GameObject::addToNetEventMask(int mask)
+{
+	m_event_mask |= mask;
+}

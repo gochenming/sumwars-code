@@ -1150,19 +1150,7 @@ void World::updatePlayers()
 		// Daten von allen verbundenen Client annehmen und verarbeiten
 		if (m_server && slot != LOCAL_SLOT)
 		{
-			// Daten abgleichen
-			if (pl->getState() == WorldObject::STATE_ACTIVE && pl->getRegion() !=0 && m_timer_limit[3])
-			{
-				CharConv cv;
-				PackageHeader header;
-				header.m_content = PTYPE_S2C_DATA_CHECK;
-				
-				header.toString(&cv);
-				
-				pl->getRegion()->getRegionCheckData(&cv);
-				
-				m_network->pushSlotMessage(cv.getBitStream(),slot);
-			}
+			
 			
 			// Nachrichten fuer die Spieler abholen und Verteilen
 			PackageHeader headerp;
@@ -1522,11 +1510,24 @@ void World::updatePlayers()
 					delete msg;
 				}
 				
+				// Daten abgleichen
+				if (pl->getState() == WorldObject::STATE_ACTIVE && pl->getRegion() !=0 && m_timer_limit[3])
+				{
+					CharConv cv;
+					PackageHeader header;
+					header.m_content = PTYPE_S2C_DATA_CHECK;
+				
+					header.toString(&cv);
+				
+					pl->getRegion()->getRegionCheckData(&cv);
+				
+					m_network->pushSlotMessage(cv.getBitStream(),slot);
+				}
 			}
+			
+			
 		}
-
-
-	}
+	}	
 }
 
 bool World::writeNetEvent(Region* region,NetEvent* event, CharConv* cv)

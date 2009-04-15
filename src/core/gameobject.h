@@ -247,10 +247,7 @@ class GameObject
 		 * \brief Fuegt die angegebene Maske per OR zur aktuell hinzu
 		 * \param mask Bitmaske
 		 */
-		void addToNetEventMask(int mask)
-		{
-			m_event_mask |= mask;
-		}
+		void addToNetEventMask(int mask);
 		
 	
 		/**

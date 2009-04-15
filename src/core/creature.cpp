@@ -4115,6 +4115,7 @@ void Creature::writeNetEvent(NetEvent* event, CharConv* cv)
 	if (event->m_data & NetEvent::DATA_STATE)
 	{
 		cv->toBuffer((char) getState());
+		DEBUG5("sending state %i %i",getId(),getState());
 	}
 
 	if (event->m_data & NetEvent::DATA_ATTACK_WALK_SPEED)
@@ -4278,13 +4279,16 @@ void Creature::processNetEvent(NetEvent* event, CharConv* cv)
 		char ctmp;
 		cv->fromBuffer(ctmp);
 
-		if (oldstate != STATE_DIEING && oldstate != STATE_DEAD && (ctmp==STATE_DIEING || ctmp == STATE_DEAD))
+		// einige fuer die Steuerung wichtige zustaende werden ausgeklammert
+		if (ctmp <=STATE_DEAD || ctmp >=STATE_STATIC)
 		{
-			die();
+			if (oldstate != STATE_DIEING && oldstate != STATE_DEAD && (ctmp==STATE_DIEING || ctmp == STATE_DEAD))
+			{
+				die();
+			}
+			setState((State) ctmp);
+			DEBUG5("object %i changed state from %i to %i",getId(),oldstate,ctmp);
 		}
-		setState((State) ctmp);
-		DEBUG5("object %i changed state from %i to %i",getId(),oldstate,ctmp);
-
 
 	}
 
