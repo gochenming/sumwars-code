@@ -1782,17 +1782,6 @@ void Region::setRegionData(CharConv* cv,WorldObjectMap* players)
 
 void Region::getRegionCheckData(CharConv* cv)
 {
-	// Anzahl der statischen Objekte eintragen
-	DEBUG5("static objects: %i",m_static_objects->size());
-	cv->toBuffer<short>((short) m_static_objects->size());
-
-	// statische Objekte in den Puffer eintragen
-	WorldObjectMap::iterator it;
-	for (it = m_static_objects->begin();it!=m_static_objects->end();++it)
-	{
-		cv->toBuffer((it->second)->getId());
-		DEBUG5("static object: %s",(it->second)->getNameId().c_str());
-	}
 
 
 	// Anzahl der nicht  statischen Objekte eintragen
@@ -1848,45 +1837,92 @@ void Region::checkRegionData(CharConv* cv)
 	std::set<int> objects;
 	int id;
 	
-	cv->fromBuffer(nr);
 	WorldObject* wo;
-	DEBUG5("static Objects %i",nr);
-	for (int i=0; i<nr; i++)
-	{
-		cv->fromBuffer(id);
-		objects.insert(id);
-		
-		if (m_static_objects->count(id) ==0)
-		{
-			// Objekt fehlt beim Client
-			WARNING("object %i is missing",id);
-		}
-	}
+	Projectile* pr;
+	DropItem* di;
 	
-	// zu loeschende Objekte
-	WorldObjectList wtodelete;
+	static std::set<int> objectstodelete;
+	static std::set<int> objectsmissing;
+	static std::set<int> projtodelete;
+	static std::set<int> projmissing;
+	static std::set<int> itemtodelete;
+	static std::set<int> itemmissing;
+	static std::set<int>::iterator setit;
+	
+	// Objekte die nach dem letzten Check fraglich waren loeschen
+	// bzw neu anfordern
 	WorldObjectList::iterator wit;
 	WorldObjectMap::iterator it;
-	for (it = m_static_objects->begin();it!=m_static_objects->end();++it)
+	
+	// WorldObjects
+	for (setit = objectstodelete.begin(); setit != objectstodelete.end(); ++setit)
 	{
-		wo = it->second;
-		if (objects.count(wo->getId()) ==0)
+		wo = getObject((*setit));
+		if (wo != 0)
 		{
-			// Objekt ist beim Client zu viel
 			WARNING("object %i does not exist at server",wo->getId());
-			wtodelete.push_back(wo);
+			wo->destroy();
+			deleteObject(wo);
+			delete wo;
+		}
+	}
+	for (setit = objectsmissing.begin(); setit != objectsmissing.end(); ++setit)
+	{
+		wo = getObject((*setit));
+		if (wo ==0)
+		{
+			WARNING("object %i is missing",(*setit));	
 		}
 	}
 	
-	for (wit = wtodelete.begin(); wit != wtodelete.end(); ++wit)
+	// Projektile
+	for (setit = projtodelete.begin(); setit != projtodelete.end(); ++setit)
 	{
-		(*wit)->destroy();
-		deleteObject( (*wit));
-		delete *wit;
+		pr = getProjectile(*setit);
+		if (pr != 0)
+		{
+			WARNING("projectile %i does not exist at server",pr->getId());
+			deleteProjectile(pr);
+			delete pr;
+		}
+	}
+	for (setit = projmissing.begin(); setit != projmissing.end(); ++setit)
+	{
+		pr = getProjectile(*setit);
+		if (pr ==0)
+		{
+			WARNING("projectile %i is missing",(*setit));	
+		}
 	}
 	
-	objects.clear();
-	wtodelete.clear();
+	// DropItem
+	for (setit = itemtodelete.begin(); setit != itemtodelete.end(); ++setit)
+	{
+		di = getDropItem(*setit);
+		if (di != 0)
+		{
+			WARNING("dropitem %i does not exist at server",di->getId());
+			deleteItem(di->getId(), true);
+		}
+	}
+	for (setit = itemmissing.begin(); setit != itemmissing.end(); ++setit)
+	{
+		di = getDropItem(*setit);
+		if (di ==0)
+		{
+			WARNING("dropitem %i is missing",(*setit));	
+		}
+	}
+	
+	
+	objectstodelete.clear();
+	objectsmissing.clear();
+	projtodelete.clear();
+	projmissing.clear();
+	itemtodelete.clear();
+	itemmissing.clear();
+	
+	
 	
 	cv->fromBuffer(nr);
 	DEBUG5("nonstatic Objects %i",nr);
@@ -1898,7 +1934,7 @@ void Region::checkRegionData(CharConv* cv)
 		if (m_objects->count(id) ==0)
 		{
 			// Objekt fehlt beim Client
-			WARNING("object %i is missing",id);
+			objectsmissing.insert(id);
 		}
 	}
 	
@@ -1908,25 +1944,14 @@ void Region::checkRegionData(CharConv* cv)
 		if (objects.count(wo->getId()) ==0)
 		{
 			// Objekt ist beim Client zu viel
-			WARNING("object %i does not exist at server",wo->getId());
-			wtodelete.push_back(wo);
+			objectstodelete.insert(wo->getId());
 		}
-	}
-	
-	for (wit = wtodelete.begin(); wit != wtodelete.end(); ++wit)
-	{
-		(*wit)->destroy();
-		deleteObject( (*wit));
-		delete *wit;
 	}
 	
 	objects.clear();
 	
 	cv->fromBuffer(nr);
 	ProjectileMap::iterator kt;
-	
-	std::list<Projectile*> ptodelete;
-	std::list<Projectile*>::iterator pit;
 	
 	DEBUG5("projectiles %i",nr);
 	for (int i=0; i<nr; i++)
@@ -1937,37 +1962,24 @@ void Region::checkRegionData(CharConv* cv)
 		if (m_projectiles->count(id) ==0)
 		{
 			// Objekt fehlt beim Client
-			WARNING("projectile %i is missing",id);
-			
+			projmissing.insert(id);
 		}
 	}
 	
-	Projectile* pr;
 	for (kt = m_projectiles->begin(); kt!=m_projectiles->end();++kt)
 	{
 		pr = kt->second;
 		if (objects.count(pr->getId()) ==0)
 		{
 			// Objekt ist beim Client zu viel
-			WARNING("projectile %i does not exist at server",pr->getId());
-			ptodelete.push_back(pr);
+			objectstodelete.insert(pr->getId());
 		}
-	}
-	
-	for (pit = ptodelete.begin(); pit != ptodelete.end(); ++pit)
-	{
-		deleteProjectile( (*pit));
-		delete *pit;
 	}
 	
 	objects.clear();
 	
 	cv->fromBuffer(nr);
 	DropItemMap::iterator lt;
-	
-	std::list<DropItem*> dtodelete;
-	std::list<DropItem*>::iterator dit;
-	
 	
 	DEBUG5("dropitems %i",nr);
 	for (int i=0; i<nr; i++)
@@ -1978,25 +1990,18 @@ void Region::checkRegionData(CharConv* cv)
 		if (m_drop_items->count(id) ==0)
 		{
 			// Objekt fehlt beim Client
-			WARNING("dropitem %i is missing",id);
+			itemmissing.insert(id);
 		}
 	}
 	
-	DropItem* di;
 	for (lt = m_drop_items->begin(); lt!=m_drop_items->end();++lt)
 	{
 		di = lt->second;
 		if (objects.count(di->getId()) ==0)
 		{
 			// Objekt ist beim Client zu viel
-			WARNING("dropitem %i does not exist at server",di->getId());
-			dtodelete.push_back(di);
+			objectstodelete.insert(di->getId());
 		}
-	}
-	
-	for (dit = dtodelete.begin(); dit != dtodelete.end(); ++dit)
-	{
-		deleteItem( (*dit)->getId(),true);
 	}
 }
 

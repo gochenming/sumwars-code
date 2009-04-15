@@ -1151,7 +1151,7 @@ void World::updatePlayers()
 		if (m_server && slot != LOCAL_SLOT)
 		{
 			// Daten abgleichen
-			if (pl->getState() == WorldObject::STATE_ACTIVE && pl->getRegion() !=0 && m_timer_limit[6])
+			if (pl->getState() == WorldObject::STATE_ACTIVE && pl->getRegion() !=0 && m_timer_limit[3])
 			{
 				CharConv cv;
 				PackageHeader header;
