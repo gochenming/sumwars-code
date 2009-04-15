@@ -349,7 +349,8 @@ void PartyInfo::update()
 		vis = false;
 		if (leader && party->getMembers().count(pl->getId())>0 && pl != player)
 		{
-			vis = true;
+			if (World::getWorld() !=0 && !World::getWorld()->isCooperative())
+				vis = true;
 		}
 		stream.str("");
 		stream << "KickMemberButton";
@@ -364,7 +365,8 @@ void PartyInfo::update()
 		vis = false;
 		if ((!solo && pl->getId() == party->getLeader()) || (solo && pl->getParty()->getId() == player->getCandidateParty()))
 		{
-			vis = true;
+			if (World::getWorld() !=0 && !World::getWorld()->isCooperative())
+				vis = true;
 		}
 		stream.str("");
 		stream << "LeavePartyButton";
