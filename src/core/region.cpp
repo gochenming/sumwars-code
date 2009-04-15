@@ -726,6 +726,7 @@ bool Region::insertObject(WorldObject* object, Vector pos, float angle, bool col
 	else
 	{
 		// fuer Nicht Spieler NetEvent erzeugen, dass das Objekt erschaffen wurde
+		
 		NetEvent event;
 		event.m_type = NetEvent::OBJECT_CREATED;
 		event.m_id = object->getId();
@@ -1890,7 +1891,22 @@ void Region::checkRegionData(CharConv* cv)
 		wo = getObject((*setit));
 		if (wo ==0)
 		{
-			WARNING("object %i is missing",(*setit));	
+			WARNING("object %i is missing",(*setit));
+			// fehlende Daten zur Region anfordern
+			PackageHeader header;
+			header.m_content = PTYPE_C2S_DATA_REQUEST; 	// Data Request von Client zu Server
+			header.m_number =1;
+
+			ClientDataRequest datareq;
+			datareq.m_data = ClientDataRequest::OBJECT;
+			datareq.m_id = *setit;
+			datareq.m_region_id = getId();
+
+			CharConv msg;
+			header.toString(&msg);
+			datareq.toString(&msg);
+
+			World::getWorld()->getNetwork()->pushSlotMessage(msg.getBitStream());
 		}
 	}
 	
@@ -1910,7 +1926,22 @@ void Region::checkRegionData(CharConv* cv)
 		pr = getProjectile(*setit);
 		if (pr ==0)
 		{
-			WARNING("projectile %i is missing",(*setit));	
+			WARNING("projectile %i is missing",(*setit));
+			// fehlende Daten zur Region anfordern
+			PackageHeader header;
+			header.m_content = PTYPE_C2S_DATA_REQUEST; 	// Data Request von Client zu Server
+			header.m_number =1;
+
+			ClientDataRequest datareq;
+			datareq.m_data = ClientDataRequest::PROJECTILE;
+			datareq.m_id = *setit;
+			datareq.m_region_id = getId();
+
+			CharConv msg;
+			header.toString(&msg);
+			datareq.toString(&msg);
+
+			World::getWorld()->getNetwork()->pushSlotMessage(msg.getBitStream());	
 		}
 	}
 	
@@ -1929,7 +1960,22 @@ void Region::checkRegionData(CharConv* cv)
 		di = getDropItem(*setit);
 		if (di ==0)
 		{
-			WARNING("dropitem %i is missing",(*setit));	
+			WARNING("dropitem %i is missing",(*setit));
+			// fehlende Daten zur Region anfordern
+			PackageHeader header;
+			header.m_content = PTYPE_C2S_DATA_REQUEST; 	// Data Request von Client zu Server
+			header.m_number =1;
+
+			ClientDataRequest datareq;
+			datareq.m_data = ClientDataRequest::ITEM;
+			datareq.m_id = *setit;
+			datareq.m_region_id = getId();
+
+			CharConv msg;
+			header.toString(&msg);
+			datareq.toString(&msg);
+
+			World::getWorld()->getNetwork()->pushSlotMessage(msg.getBitStream());	
 		}
 	}
 	
@@ -2105,11 +2151,13 @@ bool  Region::dropItem(Item* item, Vector pos)
 
 			if (World::getWorld()->isServer())
 			{
+				
 				NetEvent event;
 				event.m_type = NetEvent::ITEM_DROPPED;
 				event.m_id = di->getId();
 
 				insertNetEvent(event);
+				
 			}
 
 			return true;

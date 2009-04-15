@@ -2182,6 +2182,7 @@ void World::handleDataRequest(ClientDataRequest* request, int slot )
 	}
 	else if (request->m_data == ClientDataRequest::OBJECT)
 	{
+		DEBUG("Daten zu Objekt %i gefordert",request->m_id);
 		if (region!=0)
 		{
 			// Daten werden per Event aktualisiert

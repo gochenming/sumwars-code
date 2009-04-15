@@ -146,8 +146,8 @@ struct ClientDataRequest
 		REGION_ALL=3,
 		ITEM = 0x10,
 		PLAYERS = 0x20,
-		OBJECT = 0x30,
- 		PROJECTILE = 0x40,
+		OBJECT = 0x40,
+ 		PROJECTILE = 0x80,
 	};
 
 	/**
