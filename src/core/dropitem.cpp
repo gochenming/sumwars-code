@@ -70,6 +70,8 @@ void DropItem::fromString(CharConv* cv)
 	
 	m_item = ItemFactory::createItem((Item::Type) type, subtype,id);
 	m_item->fromString(cv);
+	
+	m_time = cv->getDelay();
 }
 
 
