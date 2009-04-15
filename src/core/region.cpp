@@ -1625,7 +1625,14 @@ void Region::createObjectFromString(CharConv* cv, WorldObjectMap* players)
 	
 	obj->fromString(cv);
 
-
+	WorldObject* oldobj = getObject(obj->getId());
+	if (oldobj != 0)
+	{
+		DEBUG("Object %i already exists",oldobj->getId());
+		oldobj->destroy();
+		deleteObject(oldobj);
+		delete oldobj;
+	}
 	insertObject(obj,obj->getShape()->m_center,obj->getShape()->m_angle);
 }
 
@@ -1648,6 +1655,13 @@ void Region::createProjectileFromString(CharConv* cv)
 
 	proj->fromString(cv);
 
+	Projectile* oldproj = getProjectile(proj->getId());
+	if (oldproj != 0)
+	{
+		DEBUG("Projectile %i already exists",oldproj->getId());
+		deleteProjectile(oldproj);
+		delete oldproj;
+	}
 	insertProjectile(proj,proj->getShape()->m_center);
 }
 
@@ -1666,6 +1680,11 @@ void Region::createItemFromString(CharConv* cv)
 	DropItem* di = new DropItem(id);
 	di->fromString(cv);
 
+	if (m_drop_items->count(id) >0)
+	{
+		DEBUG5("Item %i already exists",di->getId());
+		deleteItem(id);
+	}
 	m_drop_items->insert(std::make_pair(id,di));
 	m_drop_item_locations->insert(std::make_pair(di->getLocationId(),di));
 
@@ -1972,7 +1991,7 @@ void Region::checkRegionData(CharConv* cv)
 		if (objects.count(pr->getId()) ==0)
 		{
 			// Objekt ist beim Client zu viel
-			objectstodelete.insert(pr->getId());
+			projtodelete.insert(pr->getId());
 		}
 	}
 	
@@ -2000,7 +2019,7 @@ void Region::checkRegionData(CharConv* cv)
 		if (objects.count(di->getId()) ==0)
 		{
 			// Objekt ist beim Client zu viel
-			objectstodelete.insert(di->getId());
+			itemtodelete.insert(di->getId());
 		}
 	}
 }
@@ -2012,6 +2031,7 @@ void Region::setTile(Tile tile,short x, short y)
 
 bool  Region::dropItem(Item* item, Vector pos)
 {
+	DEBUG5("drop %s %i",item->m_subtype.c_str(), item->m_id);
 	// Menge der bereits getesteten Felder
 	std::set<int> tfields;
 
@@ -2230,6 +2250,7 @@ bool Region::deleteItem(int id, bool delitem)
 		int pos = it->second->getLocationId();
 		it2 = m_drop_item_locations->find(pos);
 
+		
 		NetEvent event;
 		event.m_type = NetEvent::ITEM_REMOVED;
 		event.m_id = it->second->getId();
