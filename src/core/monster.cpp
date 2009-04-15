@@ -59,6 +59,13 @@ Monster::Monster( int id,MonsterBasicData& data)
 	m_ai.m_vars = data.m_ai_vars;
 	m_ai.m_chase_player_id =0;
 	
+	// HP Faktor bei mehreren Spielern
+	WorldObjectMap * pl = World::getWorld()->getPlayers();
+	float fak = (0.5 + 0.5*pl->size());
+	
+	getBaseAttr()->m_max_health *= fak;
+	getBaseAttrMod()->m_max_health *= fak;
+	getDynAttr()->m_health *= fak;
 	calcBaseAttrMod();
 	
 	m_base_action = Action::NOACTION;
@@ -71,12 +78,6 @@ Monster::Monster( int id,MonsterBasicData& data)
 	}
 	DEBUG5("base action %i",m_base_action);
 	
-	// HP Faktor bei mehreren Spielern
-	WorldObjectMap * pl = World::getWorld()->getPlayers();
-	float fak = (0.5 + 0.5*pl->size());
-	
-	getBaseAttr()->m_max_health *= fak;
-	getDynAttr()->m_health *= fak;
 }
 
 Monster::~Monster()

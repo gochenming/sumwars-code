@@ -3868,7 +3868,6 @@ void Creature::toString(CharConv* cv)
 
 	cv->toBuffer(m_dyn_attr.m_health);
 	cv->toBuffer(m_base_attr_mod.m_max_health);
-
 	DEBUG5("write offset: %i",cv->getBitStream()->GetNumberOfBitsUsed());
 
 	
@@ -3936,8 +3935,8 @@ void Creature::fromString(CharConv* cv)
 
 	cv->fromBuffer(m_dyn_attr.m_health);
 	cv->fromBuffer(m_base_attr_mod.m_max_health);
+	m_base_attr.m_max_health = m_base_attr_mod.m_max_health;
 	DEBUG5("read offset: %i",cv->getBitStream()->GetReadOffset());
-
 	// Statusveraenderungen
 	char c=0;
 	cv->fromBuffer<char>(c);
