@@ -127,6 +127,11 @@ enum PackageType
     * \brief Daten zum Pruefung der Synchronisation
     */
    PTYPE_S2C_DATA_CHECK,
+   
+   /**
+    * \brief Daten der Quests
+    */
+   PTYPE_S2C_QUEST,
 };
 
 /**

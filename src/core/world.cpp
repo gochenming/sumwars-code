@@ -795,6 +795,30 @@ void World::handleSavegame(CharConv *cv, int slot)
 					}
 				}
 			}
+			
+			if (slot != LOCAL_SLOT)
+			{
+				// Informationen ueber Parties senden
+				PackageHeader header5;
+				header5.m_number =1;
+				header5.m_content =PTYPE_S2C_QUEST;
+
+				std::map< std::string, Quest * >::iterator it;
+				
+				for (it = m_quests.begin(); it != m_quests.end(); ++it)
+				{
+					
+						DEBUG5("sending data for quest %s",it->second->getName().c_str());
+						
+						CharConv msg5;
+						header5.toString(&msg5);
+
+						it->second->toString(&msg5);
+						m_network->pushSlotMessage(msg5.getBitStream(),slot);
+					
+				}
+			}
+			
 		}
 	}
 
@@ -1366,6 +1390,19 @@ void World::updatePlayers()
 				{
 					int id = headerp.m_number;
 					getParty(id)->fromString(cv);
+				}
+				
+				if (headerp.m_content == PTYPE_S2C_QUEST)
+				{
+					std::string name,tabname;
+					cv->fromBuffer(name);
+					cv->fromBuffer(tabname);
+					DEBUG5("got data for quest %s %s",name.c_str(), tabname.c_str());
+					
+					Quest* qu = new Quest(name,tabname);
+					qu->fromString(cv);
+					
+					addQuest(tabname,qu);
 				}
 
 				if (headerp.m_content == PTYPE_S2C_REGION_CHANGED)
