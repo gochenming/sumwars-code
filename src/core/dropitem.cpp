@@ -58,7 +58,7 @@ void DropItem::fromString(CharConv* cv)
 	cv->fromBuffer(type);
 	cv->fromBuffer(subtype);
 	cv->fromBuffer(id);
-	
+	setSubtype(subtype);
 	if (id != getId())
 	{
 		ERRORMSG("inconsistent dropitem: id %i item id %i",getId(), id);
