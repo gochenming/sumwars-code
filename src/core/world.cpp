@@ -55,15 +55,18 @@ void  World::createWorld(bool server, int port, bool cooperative, int max_player
 	m_players = new WorldObjectMap;;
 
 
-
-	m_max_nr_players =max_players;
 	if (server)
 	{
-		m_parties.resize(m_max_nr_players);
-		for (int i =0;i<m_max_nr_players;i++)
-		{
-			m_parties[i].init(i);
-		}
+		m_max_nr_players =max_players;
+	}
+	else
+	{
+		m_max_nr_players =8;
+	}
+	m_parties.resize(m_max_nr_players);
+	for (int i =0;i<m_max_nr_players;i++)
+	{
+		m_parties[i].init(i);
 	}
 	
 	m_local_player =0;
