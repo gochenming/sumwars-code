@@ -1,0 +1,27 @@
+#ifndef CONFIG_H
+#define CONFIG_H
+
+// Generated file, do not edit!  Make changes to config.h.in instead.
+
+#define SUMWARS_INSTALL_PREFIX "@CMAKE_INSTALL_PREFIX@"
+#define SUMWARS_SHARE_DIR "@SUMWARS_SHARE_DIR@"
+#define SUMWARS_DOC_DIR "@SUMWARS_DOC_DIR@"
+
+// If the following macro definitions turn out to be "NOTFOUND", the FindOGRE.cmake
+// has failed to locate the appropriate paths. In that case, please supply them
+// manually via cmake -D or cmake-gui
+#ifdef _DEBUG
+#   define SUMWARS_OGRE_PLUGIN_DIR "@OGRE_PLUGIN_DIR_DBG@"
+#   define SUMWARS_OGRE_PLUGIN_RENDERSYSTEM_GL_LIB "@OGRE_RenderSystem_GL_LIBRARY_DBG@"
+#   define SUMWARS_OGRE_PLUGIN_RENDERSYSTEM_DIRECT3D9_LIB "@OGRE_RenderSystem_Direct3D9_LIBRARY_DBG@"
+#   define SUMWARS_OGRE_PLUGIN_PARTICLEFX_LIB "@OGRE_Plugin_ParticleFX_LIBRARY_DBG@"
+#   define SUMWARS_OGRE_PLUGIN_OCTREESCENEMANAGER_LIB "@OGRE_Plugin_OctreeSceneManager_LIBRARY_DBG@"
+#else
+#   define SUMWARS_OGRE_PLUGIN_DIR "@OGRE_PLUGIN_DIR_REL@"
+#   define SUMWARS_OGRE_PLUGIN_RENDERSYSTEM_GL_LIB "@OGRE_RenderSystem_GL_LIBRARY_REL@"
+#   define SUMWARS_OGRE_PLUGIN_RENDERSYSTEM_DIRECT3D9_LIB "@OGRE_RenderSystem_Direct3D9_LIBRARY_REL@"
+#   define SUMWARS_OGRE_PLUGIN_PARTICLEFX_LIB "@OGRE_Plugin_ParticleFX_LIBRARY_REL@"
+#   define SUMWARS_OGRE_PLUGIN_OCTREESCENEMANAGER_LIB "@OGRE_Plugin_OctreeSceneManager_LIBRARY_REL@"
+#endif
+
+#endif
