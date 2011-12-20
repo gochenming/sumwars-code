@@ -18,6 +18,12 @@ material Item
 				scroll 0 0
 				rotate 0
 			}
+			// RT Shader system section.
+ 			rtshader_system
+ 			{	 	
+ 				// Override lighting stage with per pixel lighting. 			
+ 				lighting_stage per_pixel
+ 			}			
 		}
 	}
 }
@@ -34,6 +40,12 @@ material Amulet_Atlastex
 			{
 				texture amu_atlas.png
 			}
+			// RT Shader system section.
+ 			rtshader_system
+ 			{	 	
+ 				// Override lighting stage with per pixel lighting. 			
+ 				lighting_stage per_pixel
+ 			}			
 		}
 	}
 }
@@ -50,6 +62,12 @@ material banner_holder
 			{
 				texture banner_holder.png
 			}
+			// RT Shader system section.
+ 			rtshader_system
+ 			{	 	
+ 				// Override lighting stage with per pixel lighting. 			
+ 				lighting_stage per_pixel
+ 			}			
 		}
 	}
 }
@@ -66,6 +84,12 @@ material Sack_01
 			{
 				texture Sack_01.png
 			}
+			// RT Shader system section.
+ 			rtshader_system
+ 			{	 	
+ 				// Override lighting stage with per pixel lighting. 			
+ 				lighting_stage per_pixel
+ 			}			
 		}
 	}
 }
@@ -82,6 +106,12 @@ material Sack_02
 			{
 				texture Sack_02.png
 			}
+			// RT Shader system section.
+ 			rtshader_system
+ 			{	 	
+ 				// Override lighting stage with per pixel lighting. 			
+ 				lighting_stage per_pixel
+ 			}			
 		}
 	}
 }
@@ -98,6 +128,12 @@ material Sack_03
 			{
 				texture Sack_03.png
 			}
+			// RT Shader system section.
+ 			rtshader_system
+ 			{	 	
+ 				// Override lighting stage with per pixel lighting. 			
+ 				lighting_stage per_pixel
+ 			}			
 		}
 	}
 }
@@ -114,6 +150,12 @@ material barrel_03
 			{
 				texture barrel_03.png
 			}
+			// RT Shader system section.
+ 			rtshader_system
+ 			{	 	
+ 				// Override lighting stage with per pixel lighting. 			
+ 				lighting_stage per_pixel
+ 			}			
 		}
 	}
 }
@@ -130,6 +172,12 @@ material barrel_02
 			{
 				texture barrel_02.png
 			}
+			// RT Shader system section.
+ 			rtshader_system
+ 			{	 	
+ 				// Override lighting stage with per pixel lighting. 			
+ 				lighting_stage per_pixel
+ 			}			
 		}
 	}
 }
@@ -146,6 +194,12 @@ material chest_02
 			{
 				texture chest_02.png
 			}
+			// RT Shader system section.
+ 			rtshader_system
+ 			{	 	
+ 				// Override lighting stage with per pixel lighting. 			
+ 				lighting_stage per_pixel
+ 			}			
 		}
 	}
 }
@@ -162,6 +216,12 @@ material bucket
 			{
 				texture bucket.png
 			}
+			// RT Shader system section.
+ 			rtshader_system
+ 			{	 	
+ 				// Override lighting stage with per pixel lighting. 			
+ 				lighting_stage per_pixel
+ 			}			
 		}
 	}
 }
@@ -178,6 +238,12 @@ material Box_02
 			{
 				texture Box_02.png
 			}
+			// RT Shader system section.
+ 			rtshader_system
+ 			{	 	
+ 				// Override lighting stage with per pixel lighting. 			
+ 				lighting_stage per_pixel
+ 			}			
 		}
 	}
 }
