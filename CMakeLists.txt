@@ -341,6 +341,8 @@ SET(SRCS
   ./src/gui/tooltip.cpp
   ./src/gui/optionswindow.cpp
   ./src/gui/clipboard.cpp
+  ./src/gui/ShaderManager.cpp
+  ./src/gui/ShadowCameraSetup.cpp
 )
  
 IF(SUMWARS_BUILD_TOOLS)
