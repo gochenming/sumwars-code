@@ -290,10 +290,12 @@ OptionsWindow::OptionsWindow (Document* doc, OIS::Keyboard *keyboard)
 	if (cbo)
 	{
 		cbo->addItem (new StrListItem ((CEGUI::utf8*) gettext("Off"), "", 0));
-		cbo->addItem (new StrListItem ((CEGUI::utf8*) gettext("Simple (Higher quality)"), "", 0));
-		cbo->addItem (new StrListItem ((CEGUI::utf8*) gettext("Simple (Lower quality)"), "", 0));
-		cbo->addItem (new StrListItem ((CEGUI::utf8*) gettext("Simulated (Experimental 1)"), "", 0));
-		cbo->addItem (new StrListItem ((CEGUI::utf8*) gettext("Simulated (Experimental 2)"), "", 0));
+		cbo->addItem (new StrListItem ((CEGUI::utf8*) gettext("CPU based (method 1)"), "", 0));
+		cbo->addItem (new StrListItem ((CEGUI::utf8*) gettext("CPU based (method 2)"), "", 0));
+		cbo->addItem (new StrListItem ((CEGUI::utf8*) gettext("GPU based (simple method 1)"), "", 0));
+		cbo->addItem (new StrListItem ((CEGUI::utf8*) gettext("GPU based (simple method 2)"), "", 0));
+		cbo->addItem (new StrListItem ((CEGUI::utf8*) gettext("GPU shader based (method 1)"), "", 0));
+		cbo->addItem (new StrListItem ((CEGUI::utf8*) gettext("GPU shader based (method 2)"), "", 0));
 
 		if (usedShadowMode >= Options::SM_NONE && usedShadowMode < Options::SM_COUNT)
 		{
@@ -829,24 +831,6 @@ bool OptionsWindow::onShadowModeSelected(const CEGUI::EventArgs& evt)
 	return true;
 }
 
-
-/*
-	// TODO: get rid of obsolete code.
-bool OptionsWindow::onResetGraphics(const CEGUI::EventArgs& evt)
-{
-	std::string configpath;
-#if defined (_WIN32)
-	configpath = SumwarsHelper::userPath() + "/ogre.cfg";
-#elif defined (__APPLE__)
-	configpath = SumwarsHelper::macPath() + "/ogre.cfg";
-#elif defined (__unix__)
-	configpath = SumwarsHelper::userPath() + "/ogre.cfg";
-#endif
-
-	remove(configpath.c_str());
-	return true;
-}
-*/
 
 bool OptionsWindow::onLanguageSelected(const CEGUI::EventArgs& evt)
 {
