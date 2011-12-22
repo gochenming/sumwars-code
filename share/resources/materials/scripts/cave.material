@@ -18,6 +18,12 @@ material cave_ambient
 				scroll 0 0
 				rotate 0
 			}
+			// RT Shader system section.
+ 			rtshader_system
+ 			{	 	
+ 				// Override lighting stage with per pixel lighting. 			
+ 				lighting_stage per_pixel
+ 			}			
 		}
 	}
 }
@@ -34,6 +40,12 @@ material Atlastex_mine_cave
 			{
 				texture Atlastex_mine_cave.png
 			}
+			// RT Shader system section.
+ 			rtshader_system
+ 			{	 	
+ 				// Override lighting stage with per pixel lighting. 			
+ 				lighting_stage per_pixel
+ 			}			
 		}
 	}
 }
