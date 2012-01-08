@@ -512,9 +512,9 @@ void World::deleteWorld()
 
 World::~World()
 {
-
 	if (m_network != 0)
 	{
+		m_network->kill();
 		delete m_network;
 	}
 
@@ -1916,7 +1916,6 @@ void World::updatePlayers()
 				}
 
 				// NetEvents der Region in der der Spieler ist
-				bool ret;
 				if (reg !=0)
 				{
 					for (lt = reg->getNetEvents().begin(); lt != reg->getNetEvents().end(); ++lt)
@@ -1925,8 +1924,7 @@ void World::updatePlayers()
 						DEBUGX(" send local event %i id %i data %i",lt->m_type,lt->m_id, lt->m_data);
 
 						header.toString(msg);
-						ret = writeNetEvent(reg,&(*lt),msg);
-
+						bool ret = writeNetEvent(reg,&(*lt),msg);
 						if (ret)
 						{
 							m_network->pushSlotMessage(msg,slot);
