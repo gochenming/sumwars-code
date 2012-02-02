@@ -292,17 +292,25 @@ OptionsWindow::OptionsWindow (Document* doc, OIS::Keyboard *keyboard)
 	if (cbo)
 	{
 		cbo->addItem (new StrListItem ((CEGUI::utf8*) gettext("Off"), "", 0));
-		cbo->addItem (new StrListItem ((CEGUI::utf8*) gettext("Simple (Higher quality)"), "", 0));
-		cbo->addItem (new StrListItem ((CEGUI::utf8*) gettext("Simple (Lower quality)"), "", 0));
-		cbo->addItem (new StrListItem ((CEGUI::utf8*) gettext("Simulated (Experimental 1)"), "", 0));
-		cbo->addItem (new StrListItem ((CEGUI::utf8*) gettext("Simulated (Experimental 2)"), "", 0));
+		cbo->addItem (new StrListItem ((CEGUI::utf8*) gettext("CPU based"), "", 1));
+		//cbo->addItem (new StrListItem ((CEGUI::utf8*) gettext("CPU based (method 2)"), "", 2));
+		//cbo->addItem (new StrListItem ((CEGUI::utf8*) gettext("GPU based (simple method 1)"), "", 3));
+		//cbo->addItem (new StrListItem ((CEGUI::utf8*) gettext("GPU based (simple method 2)"), "", 4));
+		cbo->addItem (new StrListItem ((CEGUI::utf8*) gettext("GPU (shader) based"), "", 5));
+		//cbo->addItem (new StrListItem ((CEGUI::utf8*) gettext("GPU shader based (method 2)"), "", 6));
 
+		// Also select by default the shadow setting saved in the options.
 		if (usedShadowMode >= Options::SM_NONE && usedShadowMode < Options::SM_COUNT)
 		{
-			if (cbo->getItemCount () > (size_t)usedShadowMode)
+			for (unsigned i = 0; i < cbo->getItemCount (); ++ i)
 			{
-				// Select the currently used option.
-				cbo->setItemSelectState ((int) usedShadowMode, true);
+				DEBUG ("item %d", cbo->getListboxItemFromIndex (i)->getID () );
+				if (cbo->getListboxItemFromIndex (i)->getID () == usedShadowMode)
+				{
+					// Select the currently used option.
+					cbo->setItemSelectState (i, true);
+					DEBUG ("item %d selected at %d", cbo->getListboxItemFromIndex (i)->getID (), i);
+				}
 			}
 		}
 
@@ -311,8 +319,6 @@ OptionsWindow::OptionsWindow (Document* doc, OIS::Keyboard *keyboard)
 
 		// refresh the object.
 		cbo->handleUpdatedListItemData();
-
-		cbo->subscribeEvent(CEGUI::Combobox::EventListSelectionAccepted, CEGUI::Event::Subscriber(&OptionsWindow::onShadowModeSelected, this));
 	}
 
 
@@ -595,12 +601,15 @@ bool OptionsWindow::onButtonOkClicked (const CEGUI::EventArgs& evt)
 		{
 			return false;
 		}
-		selectionIndex = (int)cbo->getItemIndex (item);
+		int newShadowType = static_cast<int>(item->getID ());
+
+		// The RTShaderSystem should be used only with GPU shadows
+		bool newRtssSettings = (newShadowType == Options::SM_TAI_COMPLEX || newShadowType == Options::SM_TAM_COMPLEX);
 
 		// Limit the values to the available options.
-		if (selectionIndex >= Options::SM_COUNT) selectionIndex = Options::SM_COUNT - 1;
-		if (selectionIndex < Options::SM_NONE) selectionIndex = Options::SM_NONE;
-		Options::ShadowMode newShadowSettings = static_cast<Options::ShadowMode> (selectionIndex);
+		if (newShadowType >= Options::SM_COUNT) newShadowType = Options::SM_COUNT - 1;
+		if (newShadowType < Options::SM_NONE) newShadowType = Options::SM_NONE;
+		Options::ShadowMode newShadowSettings = static_cast<Options::ShadowMode> (newShadowType);
 
 		DEBUG ("Used shadow mode (old - new) : %d - %d", Options::getInstance ()->getShadowMode (), newShadowSettings);
 	
@@ -617,6 +626,7 @@ bool OptionsWindow::onButtonOkClicked (const CEGUI::EventArgs& evt)
 			Options::getInstance ()->setUsedResolution (userResolution);
 			Options::getInstance ()->setUsedVideoDriver (selectedDriverName);
 			Options::getInstance ()->setShadowMode (newShadowSettings);
+			Options::getInstance ()->setUseRTSS (newRtssSettings);
 
 			std::string configpath;
 #if defined (__APPLE__)
@@ -809,46 +819,6 @@ bool OptionsWindow::onEnemyHighlightChanged(const CEGUI::EventArgs& evt)
 	return true;
 }
 
-
-bool OptionsWindow::onShadowModeSelected(const CEGUI::EventArgs& evt)
-{
-	//const CEGUI::MouseEventArgs& we =
-	//		static_cast<const CEGUI::MouseEventArgs&>(evt);
-
-	//CEGUI::Combobox* cbo = static_cast<CEGUI::Combobox*>(we.window);
-	//CEGUI::ListboxItem* item = cbo->getSelectedItem();
-
-	//if (item != 0)
-	//{
-	//	DEBUG ("shadow mode to %s", item->getText().c_str());
-
-	//	size_t itemIndex = cbo->getSelectionStartIndex ();
-	//	Options::ShadowMode modeToUse = static_cast<Options::ShadowMode> (itemIndex);
-	//	Options::getInstance()->setShadowMode (modeToUse);
-	//	
-	//	return true;
-	//}
-	return true;
-}
-
-
-/*
-	// TODO: get rid of obsolete code.
-bool OptionsWindow::onResetGraphics(const CEGUI::EventArgs& evt)
-{
-	std::string configpath;
-#if defined (_WIN32)
-	configpath = SumwarsHelper::userPath() + "/ogre.cfg";
-#elif defined (__APPLE__)
-	configpath = SumwarsHelper::macPath() + "/ogre.cfg";
-#elif defined (__unix__)
-	configpath = SumwarsHelper::userPath() + "/ogre.cfg";
-#endif
-
-	remove(configpath.c_str());
-	return true;
-}
-*/
 
 bool OptionsWindow::onLanguageSelected(const CEGUI::EventArgs& evt)
 {
