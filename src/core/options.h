@@ -93,10 +93,15 @@ class Options
 		enum ShadowMode
 		{
 			SM_NONE = 0,
+			// These are CPU-based techniques. While they are much more precise, they are expensive in terms of performance.
 			SM_SM_SIMPLE = 1, // SHADOWTYPE_STENCIL_MODULATIVE
 			SM_SA_SIMPLE = 2, // SHADOWTYPE_STENCIL_ADDITIVE
+			// These are GPU-based techniques, attempting to use a standar Ogre implementation. Weak results.
 			SM_TA_SIMPLE = 3, // SHADOWTYPE_TEXTURE_ADDITIVE
 			SM_TM_SIMPLE = 4, // SHADOWTYPE_TEXTURE_MODULATIVE
+			// These are shader based tecnniques.
+			SM_TAI_COMPLEX = 5,	// SHADOWTYPE_TEXTURE_ADDITIVE_INTEGRATED
+			SM_TAM_COMPLEX = 6, // SHADOWTYPE_TEXTURE_MODULATIVE_INTEGRATED
 			SM_COUNT // The count of shadow modes (2); must always use a value smaller than this one!
 		};
 
@@ -503,6 +508,24 @@ class Options
 		{
 			m_default_savegame = savegame;
 		}
+
+		/**
+		 * \brief Get the RTSS usage.
+		 */
+		bool getUseRTSS () const
+		{
+			return m_use_rtss;
+		}
+
+		/**
+		 * \brief Set the RTSS usage.
+		 */
+		void setUseRTSS (bool newValue)
+		{
+			m_use_rtss = newValue;
+		}
+
+
 		
 		/**
 		 * \brief Pushes the named value on the lua stack
@@ -589,6 +612,11 @@ class Options
 		 * \brief User preferrence to show or hide the console window.
 		 */
 		bool m_show_console_window;
+
+		/**
+		 * \brief Specifies whether the RTSS (RTShader - RunTimeShader System is used)
+		 */
+		bool m_use_rtss;
 
 		/**
 		 * \brief The preferred shadow mode.
