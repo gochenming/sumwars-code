@@ -389,6 +389,8 @@ void GraphicManager::buildStaticGeometry()
 		
 		
 		Ogre::StaticGeometry* static_geom = m_scene_manager->getStaticGeometry("StaticObjects");
+		// Activate shadow cast for static geometry. This needs to be called before the build command otherwise, STENCIL shadows (CPU based) would ignore it.
+		static_geom->setCastShadows (true);
 		static_geom->build();
 	}
 	
@@ -439,7 +441,11 @@ Ogre::MovableObject* GraphicManager::createMovableObject(MovableObjectInfo& info
 		{
 			obj_ent = m_scene_manager->createEntity(name, info.m_source);
 			// TODO: really always shadow caster ?
-			//obj_ent->setCastShadows(true);
+			//
+			if (info.m_casts_shadows)
+			{
+				obj_ent->setCastShadows(true);
+			}
 		}
 		catch (Ogre::Exception& e)
 		{
