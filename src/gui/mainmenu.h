@@ -19,15 +19,27 @@
 #include "OgreRoot.h"
 #include "window.h"
 #include "graphicobject.h"
+
+#ifdef SUMWARS_BUILD_WITH_ONLINE_SERVICES
+#include "onlineservicesmanager.h"
+#endif
+
 class SavegameList;
 
 /**
  * \class MainMenu
  * \brief Fenster Charakter Info
  */
+#ifdef SUMWARS_BUILD_WITH_ONLINE_SERVICES
+class MainMenu
+    : public Window
+    , public Ogre::FrameListener
+    , public OnlineServicesManager::StatusListener
+#else
 class MainMenu
 	: public Window
 	, public Ogre::FrameListener
+#endif
 {
 public:
     /**
@@ -76,6 +88,46 @@ public:
 	 * \brief updates the Savegamelist
 	 */
 	void updateSaveGameList();
+
+#if SUMWARS_BUILD_WITH_ONLINE_SERVICES
+    /**
+     * \fn bool onLoginToOnlineService(const CEGUI::EventArgs& evt)
+     * \brief Handles a click login button (opens a login dialog)
+     */
+    bool onLoginToOnlineService ( const CEGUI::EventArgs& evt );
+
+    /**
+     * \fn bool onLoginDialogLoginButton(const CEGUI::EventArgs& evt)
+     * \brief Handles a click to the sumwars online service from the Login Dialog
+     */
+    bool onLoginDialogLoginButton ( const CEGUI::EventArgs& evt );
+
+    /**
+     * \fn bool onLoginDialogCancelButton ( const CEGUI::EventArgs& evt );
+     * \brief Handles a click to the sumwars online service from the Login Dialog
+     */
+    bool onLoginDialogCancelButton ( const CEGUI::EventArgs& evt );
+
+
+    /**
+     * \fn bool onLoginFinished ( const CEGUI::EventArgs& evt );
+     * \brief Handles when a Login task is finished from OnlineServicesManager::StatusListener
+     */
+    virtual void onLoginFinished(std::vector<OnlineServicesManager::CharacterLight*> &characters);
+
+    /**
+     * \fn bool onLogoutFinished ( const CEGUI::EventArgs& evt );
+     * \brief Handles when a Logout task is finished from OnlineServicesManager::StatusListener
+     */
+    virtual void onLogoutFinished();
+
+    /**
+     * \fn bool onSyncCharFinished ( const CEGUI::EventArgs& evt );
+     * \brief Handles when a Sync task is finished from OnlineServicesManager::StatusListener
+     */
+    virtual void onSyncCharFinished();
+
+#endif
 
 private:
 
@@ -142,7 +194,7 @@ private:
 	/**
 	 * \brief Updates the preview of the savegame character
 	 */
-	void updateCharacterView();
+    void updateCharacterView();
 
     /**
      * \fn void createCharacterMenu()
@@ -201,6 +253,13 @@ private:
 	 * \brief Random action that is executed by the savegame player
 	 */
 	Action m_savegame_player_action;
+
+    /**
+     *\var bool m_userLoggedIn;
+     *\brief Sets to true if the user is logged in
+     */
+    bool m_userLoggedIn;
+
 };
 
 #endif // __SUMWARS_GUI_MAINMENU_H__

@@ -19,6 +19,10 @@
 #include "savegamelist.h"
 #include "stdstreamconv.h"
 
+#ifdef SUMWARS_BUILD_WITH_ONLINE_SERVICES
+#include "onlineservicesmanager.h"
+#endif
+
 SavegameList::SavegameList (Document* doc)
 	:Window(doc)
 {
@@ -59,6 +63,8 @@ SavegameList::SavegameList (Document* doc)
 	btn->setProperty("HoverImage", "set:MainMenu image:SPBtnHover");
 	btn->setProperty("PushedImage", "set:MainMenu image:SPBtnPushed");
 	
+    m_numCurrentCharacterButtons = 0;
+
 	updateTranslation();
 }
 
@@ -69,8 +75,20 @@ void SavegameList::update()
 	// Liste aller Files im Save Ordner der Form *.sav
 	Ogre::FileInfoListPtr files;
 	Ogre::FileInfoList::iterator it;
-	files = Ogre::ResourceGroupManager::getSingleton().findResourceFileInfo("Savegame","*.sav");
-	
+
+#ifdef SUMWARS_BUILD_WITH_ONLINE_SERVICES
+    if(!OnlineServicesManager::getSingleton().userLoggedIn())
+        files = Ogre::ResourceGroupManager::getSingleton().findResourceFileInfo("Savegame","*.sav");
+    else
+    {
+        std::string id = OnlineServicesManager::getSingleton().getUserDataResGroupId();
+        files = Ogre::ResourceGroupManager::getSingleton().findResourceFileInfo(id,"*.sav");
+    }
+#else
+    files = Ogre::ResourceGroupManager::getSingleton().findResourceFileInfo("Savegame","*.sav");
+#endif
+
+
 	std::fstream file;
 	char bin;
 	int n = 0;
@@ -85,10 +103,29 @@ void SavegameList::update()
 	// iterieren ueber die Files
 	unsigned char* data;
 
+    for(int i = 0; i < m_numCurrentCharacterButtons; i++)
+    {
+		std::ostringstream s;
+		s << i;
+
+        CEGUI::Window* saveItem = 0;
+        try
+        {
+            saveItem = win_mgr.getWindow(s.str().append("SaveItemRoot"));
+			saveItem->hide();
+            //m_window->removeChildWindow(saveItem);
+        }
+        catch(CEGUI::UnknownObjectException&)
+        {
+        }
+    }
+
+    m_numCurrentCharacterButtons = files->size();
+
 	float height = m_window->getPixelSize().d_width / 4.0f;
 
 	for (it = files->begin(); it!= files->end();++it)
-	{
+    {
 		filename = it->archive->getName();
 		filename += "/";
 		filename += it->filename;
@@ -105,6 +142,7 @@ void SavegameList::update()
 			try
 			{
 				saveItem = win_mgr.getWindow(s.str().append("SaveItemRoot"));
+				saveItem->show();
 				m_currentSelected = saveItem;
 			}
 			catch(CEGUI::UnknownObjectException&)
@@ -113,6 +151,7 @@ void SavegameList::update()
 				m_currentSelected = saveItem;
 				saveItem->subscribeEvent(CEGUI::PushButton::EventClicked, CEGUI::Event::Subscriber(&SavegameList::onSavegameChosen, this));
 				m_window->addChildWindow(saveItem);
+				saveItem->show();
 				
 				// make buttons resolution independant
 				saveItem->setPosition(CEGUI::UVector2(cegui_reldim(0.0f), cegui_absdim((height + 2.0f)*n)));
@@ -148,8 +187,15 @@ void SavegameList::update()
 			}
 			else
 			{
+                std::string resGrp = "Savegame";
+
+#ifdef SUMWARS_BUILD_WITH_ONLINE_SERVICES
+                if(OnlineServicesManager::getSingletonPtr())
+                    resGrp = OnlineServicesManager::getSingleton().getUserDataResGroupId();
+#endif
+
 				// create CEGUI texture for the character thumbnail
-				if(Ogre::ResourceGroupManager::getSingleton().resourceExists("Savegame", nameNoPath))
+                if(Ogre::ResourceGroupManager::getSingleton().resourceExists(resGrp, nameNoPath))
 				{
 					Ogre::TexturePtr tex = tmgr->load(texName, "Savegame");
 
@@ -208,7 +254,7 @@ void SavegameList::update()
 			delete save;
 			if (data != 0)
 				 delete data;
-		}
+        }
 	}
 	
 	CEGUI::PushButton *btn = static_cast<CEGUI::PushButton*>(win_mgr.getWindow("NewCharButton"));
