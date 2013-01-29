@@ -38,6 +38,8 @@
 #include "mainwindow.h"
 #include "timer.h"
 #include "graphicmanager.h"
+#include "ShaderManager.h"
+
 
 /**
  * \class Application
@@ -119,9 +121,16 @@ class Application
 
 		/**
 		 * \fn setupResources()
-		 * \brief Stellt die Ressourcen fuer Ogre und CEGUI ein
+		 * \brief Adds the folder structures for the Ogre and CEGUI resources. 
+		 * Note: this function does not actually load the resources. Call the initializeResourceGroups function after this one to actually load the resources.
 		 */
 		bool setupResources();
+
+		/**
+		 * \fn initializeResourceGroups()
+		 * \brief Loads the resources in the memory. The resource locations are added to groups prior to this.
+		 */
+		bool initializeResourceGroups ();
 
 		/**
 		 * \fn initGettext()
@@ -139,6 +148,11 @@ class Application
 		 * \brief initialisiert OpenAL
 		 */
 		bool initOpenAL();
+
+		/**
+		 * \brief Initialize the run-time shader system (Ogre core component)
+		 */
+		bool initializeRTShaderSystem (Ogre::SceneManager * sceneMgr);
 
 		/**
 		 * \fn bool createView()
@@ -224,7 +238,6 @@ class Application
 		 */
  		Ogre::SceneManager *m_scene_manager;
         
-
  		/**
 		 * \var bool m_shutdown
 		 * \brief true, wenn die Anwendung beendet werden soll
@@ -244,6 +257,11 @@ class Application
 		 * \brief Hauptfenster der Applikation
 		 */
 		MainWindow* m_main_window;
+
+		/**
+		 * \brief The manager handling shader based operations.
+		 */
+		ShaderManager* m_shader_mgr_ptr;
 
 		/**
 		 * \var Timer m_timer
