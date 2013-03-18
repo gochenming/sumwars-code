@@ -31,10 +31,13 @@ class MainMenu
 {
 public:
     /**
-    * \fn MainMenu (Document* doc)
-    * \brief Constructor
+     * \fn MainMenu (Document* doc)
+     * \brief Constructor
+	 * \param doc Document object.
+	 * \param ceguiSkinName The name of the cegui skin to use for any widgets created internally.
      */
-    MainMenu ( Document* doc );
+    MainMenu (Document* doc, const std::string& ceguiSkinName);
+
 
 	// ------------------------- Frame Listener functions ----------------------
 
@@ -201,6 +204,12 @@ private:
 	 * \brief Random action that is executed by the savegame player
 	 */
 	Action m_savegame_player_action;
+
+	/**
+	 * \brief The name of the CEGUI skin to use.
+	 */
+	std::string m_ceguiSkinName;
+
 };
 
 #endif // __SUMWARS_GUI_MAINMENU_H__

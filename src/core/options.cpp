@@ -93,6 +93,11 @@ void Options::init()
 	m_shadow_mode = SM_NONE;
 	
 	m_default_savegame = "";
+
+	// Also set this in the initialization. In case the options file is edited and no section with these settings is found, the defaults are loaded here.
+	setCeguiSkin ("SWB");
+	setCeguiCursorSkin ("SWBCursors");
+
 }
 
 Options* Options::getInstance()
@@ -123,6 +128,9 @@ void Options::setToDefaultOptions()
 	setMaxNumberPlayers(8);
 	setPort(5331);
 	setServerHost("127.0.0.1");
+
+	setCeguiSkin ("SWB");
+	setCeguiCursorSkin ("SWBCursors");
 }
 
 bool Options::readFromFile(const std::string& filename)
@@ -244,6 +252,24 @@ bool Options::readFromFile(const std::string& filename)
 						attr.getString("file", savegame);
 						setDefaultSavegame(savegame);
 					}
+					else if (!strcmp(child->Value(), "Internal"))
+					{
+						std::string ceguiSkin ("");
+						attr.getString ("cegui_skin", ceguiSkin);
+						if (ceguiSkin.length () == 0)
+						{
+							ceguiSkin = "SWB";
+						}
+						setCeguiSkin (ceguiSkin);
+
+						std::string ceguiCursorSkin ("");
+						attr.getString ("cegui_cursor_skin", ceguiCursorSkin);
+						if (ceguiCursorSkin.length () == 0)
+						{
+							ceguiCursorSkin = "SWBCursors";
+						}
+						setCeguiCursorSkin (ceguiCursorSkin);
+					}
 					else if (child->Type()!=TiXmlNode::TINYXML_COMMENT)
 					{
 						WARNING("unexpected element in options.xml: %s",child->Value());
@@ -323,7 +349,12 @@ bool Options::writeToFile(const std::string& filename)
 	element = new TiXmlElement( "Savegame" );
 	root->LinkEndChild(element);
 	element->SetAttribute("file",getDefaultSavegame().c_str());
-	
+
+	element = new TiXmlElement( "Internal" );
+	root->LinkEndChild(element);
+	element->SetAttribute("cegui_skin",getCeguiSkin().c_str());
+	element->SetAttribute("cegui_cursor_skin",getCeguiCursorSkin().c_str());
+
 	if (!m_debug_options.empty())
 	{
 		element = new TiXmlElement( "Debug" );

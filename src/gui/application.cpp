@@ -49,6 +49,8 @@
 // Clipboard singleton created here.
 #include "clipboard.h"
 
+// Utilities for handling CEGUI
+#include "ceguiutility.h"
 
 /**
 	Application constructor. Will call the init function.
@@ -614,6 +616,9 @@ bool Application::initOgre()
 	}
 #endif //OGRE_PLATFORM_WIN32
 
+	std::string aspectRatioString = SumwarsHelper::getSingletonPtr ()->getNearestAspectRatioStringForWindowSize (videoModeWidth, videoModeHeight);
+	SumwarsHelper::getSingletonPtr ()->setPrefferedAspectRatioString (aspectRatioString);
+
 
 	// Set the texture filtering.
 	// Possible values:
@@ -745,14 +750,17 @@ bool Application::setupResources()
 		{
 			typeName = i->first;
 			archName = i->second;
-			Ogre::ResourceGroupManager::getSingleton().addResourceLocation(archName, typeName, secName);
+			//Ogre::ResourceGroupManager::getSingleton().addResourceLocation(archName, typeName, secName);
+			SumwarsHelper::getSingletonPtr ()->addResourceLocation (archName, typeName, secName);
 		}
 	}
 	
 	Ogre::String savePath = SumwarsHelper::getStorageBasePath() + "/" + SumwarsHelper::savePath();
-	Ogre::ResourceGroupManager::getSingleton().addResourceLocation(savePath, "FileSystem", "Savegame");
+	SumwarsHelper::getSingletonPtr ()->addResourceLocation (savePath, "FileSystem", "Savegame");
+	//Ogre::ResourceGroupManager::getSingleton().addResourceLocation(savePath, "FileSystem", "Savegame");
 
 #if defined(WIN32)
+	// TODO: FIX: Augustin Preda (2013.02.07): What if you don't install windows in C:\Windows ?
 	Ogre::ResourceGroupManager::getSingleton().addResourceLocation("c:\\windows\\fonts", "FileSystem", "GUI");
 #endif
 
@@ -799,17 +807,19 @@ bool Application::initCEGUI()
 	if (parser->isPropertyPresent("SchemaDefaultResourceGroup"))
 		parser->setProperty("SchemaDefaultResourceGroup", "GUI_XML_schemas");
     
-	// Scheme laden
+	// Load schemes
+	CEGUI::SchemeManager::getSingleton().create((CEGUI::utf8*)"SWB.scheme", (CEGUI::utf8*)"GUI");
 	CEGUI::SchemeManager::getSingleton().create((CEGUI::utf8*)"TaharezLook.scheme", (CEGUI::utf8*)"GUI");
-
+	CEGUI::SchemeManager::getSingleton().create((CEGUI::utf8*)"SumWarsExtras.scheme", (CEGUI::utf8*)"GUI");
+	
 	// Imagesets laden
 	CEGUI::ImagesetManager::getSingleton().create("skills.imageset");
 
-	//CEGUI::Texture &startScreenTex = CEGUI::System::getSingleton().getRenderer()->createTexture("startscreen.png", (CEGUI::utf8*)"GUI");
-    
+	DEBUG ("Creating hardcoded images from file");
+
 	try
 	{
-		CEGUI::ImagesetManager::getSingleton().createFromImageFile("startscreen.png", "startscreen.png");
+		CEGUI::ImagesetManager::getSingleton().createFromImageFile("SumWarsLogo.png", "SumWarsLogo.png");
 		CEGUI::ImagesetManager::getSingleton().createFromImageFile("worldMap.png","worldMap.png",(CEGUI::utf8*)"GUI");
 	}
 	catch (CEGUI::Exception& e)
@@ -821,9 +831,11 @@ bool Application::initCEGUI()
 	/*CEGUI::LuaScriptModule &scriptm(CEGUI::LuaScriptModule::create());
 	m_cegui_system->setScriptingModule(&scriptm);*/
 
-	// Mauscursor setzen (evtl eher in View auslagern ? )
-	m_cegui_system->setDefaultMouseCursor((CEGUI::utf8*)"TaharezLook", (CEGUI::utf8*)"MouseArrow");
-    m_cegui_system->setDefaultTooltip((CEGUI::utf8*)"TaharezLook/Tooltip");
+	DEBUG ("Setting cursor defaults");
+
+	// Set the mousr cursor.
+	CEGUIUtility::setDefaultMouseCursor (m_cegui_system, Options::getInstance ()->getCeguiCursorSkin (), "MouseArrow");
+	CEGUIUtility::setDefaultTooltip (m_cegui_system, Options::getInstance ()->getCeguiSkin (), "Tooltip");
 
 	// Update the fade delay?
 	if (m_cegui_system->getDefaultTooltip ())
@@ -836,23 +848,36 @@ bool Application::initCEGUI()
 		//DEBUG ("New tooltip fade time set to %f", myFadeTime);
 	}
     
-	// Font setzen
+	DEBUG ("Creating fonts");
+
+	// Load the usable font list.
 	CEGUI::FontManager::getSingleton().create("DejaVuSerif-8.font", (CEGUI::utf8*)"GUI");
 	CEGUI::FontManager::getSingleton().create("DejaVuSerif-10.font", (CEGUI::utf8*)"GUI");
 	CEGUI::FontManager::getSingleton().create("DejaVuSerif-12.font", (CEGUI::utf8*)"GUI");
 	CEGUI::FontManager::getSingleton().create("DejaVuSerif-16.font", (CEGUI::utf8*)"GUI");
 	CEGUI::FontManager::getSingleton().create("DejaVuSans-10.font", (CEGUI::utf8*)"GUI");
-	m_cegui_system->setDefaultFont((CEGUI::utf8*)"DejaVuSerif-8");
 
-	// eigene Factorys einfuegen
-    CEGUI::WindowFactoryManager::getSingleton().addFalagardWindowMapping ("SumwarsTooltip", "DefaultWindow", "TaharezLook/CustomTooltip", "Falagard/Default");
+	CEGUI::FontManager::getSingleton().create("SWB_S.font", (CEGUI::utf8*)"GUI");
+
+	// Set the default font to use based on the current display resolution.
+	int configuredWidth, configuredHeight;
+	SumwarsHelper::getSizesFromResolutionString (Options::getInstance ()->getUsedResolution (), configuredWidth, configuredHeight);
+	std::string defaultFontName = SumwarsHelper::getSingletonPtr ()->getRecommendedDefaultFontForWindowSize (configuredWidth, configuredHeight);
+	DEBUG ("For the current display resolution (%d x %d), the system has decreed that the recommended font is: %s", configuredWidth, configuredHeight, defaultFontName.c_str ());
+	m_cegui_system->setDefaultFont((CEGUI::utf8*)defaultFontName.c_str ());
+
+	DEBUG ("Creating own factory for tooltips");
+	// Insert own factories. // TODO: check if this is really needed. Couldn't the custom tooltip just be added to the scheme?
+	std::stringstream ss;
+	ss << Options::getInstance ()->getCeguiSkin () << "/CustomTooltip";
+	CEGUI::WindowFactoryManager::getSingleton().addFalagardWindowMapping ("SumwarsTooltip", "DefaultWindow", ss.str ().c_str (), "Falagard/Default");
 
 #ifdef SUMWARS_BUILD_TOOLS
 	CEGUI::WindowFactoryManager::getSingleton().addFactory< CEGUI::TplWindowFactory<DebugCameraTab> >();
 	CEGUI::WindowFactoryManager::getSingleton().addFactory< CEGUI::TplWindowFactory<GuiDebugTab> >();
 	CEGUI::WindowFactoryManager::getSingleton().addFactory< CEGUI::TplWindowFactory<IconEditorTab> >();
 	CEGUI::WindowFactoryManager::getSingleton().addFactory< CEGUI::TplWindowFactory<BenchmarkTab> >();
-	CEGUI::WindowFactoryManager::getSingleton().addFactory< CEGUI::TplWindowFactory<LuaScriptTab> >();
+	CEGUI::WindowFactoryManager::getSingleton().addFactory< CEGUI::TplWindowFactory<LuaScriptTab> > ();
 	//CEGUI::WindowFactoryManager::getSingleton().addFactory< CEGUI::TplWindowFactory<ReloadTab> >();
 	CEGUI::WindowFactoryManager::getSingleton().addFactory< CEGUI::TplWindowFactory<TextFileEditWindow> >();
 	//CONTENTEDITOR
