@@ -19,8 +19,11 @@
 #include "savegamelist.h"
 #include "stdstreamconv.h"
 
-SavegameList::SavegameList (Document* doc)
-	:Window(doc)
+#include "ceguiutility.h"
+
+SavegameList::SavegameList (Document* doc, const std::string& ceguiSkinName)
+	: Window(doc)
+	, m_ceguiSkinName (ceguiSkinName)
 {
 	DEBUGX("setup main menu");
 	// GUI Elemente erzeugen
@@ -30,7 +33,7 @@ SavegameList::SavegameList (Document* doc)
 	m_currentSelected = 0;
 
 	// Rahmen fuer das Menue Savegame auswaehlen
-	CEGUI::FrameWindow* save_menu = (CEGUI::FrameWindow*) win_mgr.createWindow("TaharezLook/FrameWindow", "SavegameMenu");
+	CEGUI::FrameWindow* save_menu = (CEGUI::FrameWindow*) win_mgr.createWindow (CEGUIUtility::getWidgetWithSkin (m_ceguiSkinName, "FrameWindow"), "SavegameMenu");
 	save_menu->setPosition(CEGUI::UVector2(cegui_reldim(0.0f), cegui_reldim( 0.0f))); //0.0/0.8
 	save_menu->setSize(CEGUI::UVector2(cegui_reldim(1.0f), cegui_reldim( 1.0f))); //1.0/0.2
 	save_menu->setProperty("FrameEnabled","false");
@@ -47,17 +50,25 @@ SavegameList::SavegameList (Document* doc)
 
 	
 	// Button neu
-	btn = static_cast<CEGUI::PushButton*>(win_mgr.createWindow("TaharezLook/Button", "NewCharButton"));
+	btn = static_cast<CEGUI::PushButton*>(win_mgr.createWindow (CEGUIUtility::getWidgetWithSkin (m_ceguiSkinName, "Button"), "NewCharButton"));
 	save_menu->addChildWindow(btn);
 	btn->setPosition(CEGUI::UVector2(cegui_reldim(0.1f), cegui_reldim( 0.85f)));
 	btn->setSize(CEGUI::UVector2(cegui_reldim(0.4f), cegui_reldim( 0.05f)));
 	btn->subscribeEvent(CEGUI::PushButton::EventClicked, CEGUI::Event::Subscriber(&SavegameList::onNewCharClicked, this));
 	btn->setWantsMultiClickEvents(false);
 	btn->setInheritsAlpha(false);
-	btn->setProperty("NormalImage", "set:MainMenu image:SPBtnNormal");
-	btn->setProperty("DisabledImage", "set:MainMenu image:SPBtnNormal");
-	btn->setProperty("HoverImage", "set:MainMenu image:SPBtnHover");
-	btn->setProperty("PushedImage", "set:MainMenu image:SPBtnPushed");
+	if (btn->isPropertyPresent ("NormalImage"))
+	{
+		btn->setProperty("NormalImage", "set:MainMenu image:SPBtnNormal");
+	}
+	if (btn->isPropertyPresent ("HoverImage"))
+	{
+		btn->setProperty("HoverImage", "set:MainMenu image:SPBtnHover");
+	}
+	if (btn->isPropertyPresent ("PushedImage"))
+	{
+		btn->setProperty("PushedImage", "set:MainMenu image:SPBtnPushed");
+	}
 	
 	updateTranslation();
 }
@@ -280,12 +291,8 @@ bool SavegameList::onDeleteCharClicked(const CEGUI::EventArgs& evt)
 	CEGUI::WindowManager& win_mgr = CEGUI::WindowManager::getSingleton();
 	const CEGUI::WindowEventArgs& we = static_cast<const CEGUI::WindowEventArgs&>(evt);
 	onSavegameChosen(CEGUI::WindowEventArgs(we.window->getParent()));
-
-	CEGUI::FrameWindow* message = (CEGUI::FrameWindow*) win_mgr.getWindow("DeleteChar");
-	message->setInheritsAlpha(false);
-		
-	message->setVisible(true);
-	message->setModalState(true);
+	
+	m_document->showQuestionDialog ();
 
 	return true;
 }
@@ -293,11 +300,8 @@ bool SavegameList::onDeleteCharClicked(const CEGUI::EventArgs& evt)
 bool SavegameList::onDeleteCharConfirmClicked(const CEGUI::EventArgs& evt)
 {
 	CEGUI::WindowManager& win_mgr = CEGUI::WindowManager::getSingleton();
-	CEGUI::FrameWindow* message = (CEGUI::FrameWindow*) win_mgr.getWindow("DeleteChar");
-		
-	message->setVisible(false);
-	message->setModalState(false);
-	
+	m_document->hideQuestionDialog ();
+
 	// Get the save file to remove.
 	std::string saveFile =  m_document->getSaveFile();
 	if (saveFile.empty())
@@ -337,10 +341,8 @@ bool SavegameList::onDeleteCharConfirmClicked(const CEGUI::EventArgs& evt)
 bool SavegameList::onDeleteCharAbortClicked(const CEGUI::EventArgs& evt)
 {
 	CEGUI::WindowManager& win_mgr = CEGUI::WindowManager::getSingleton();
-	CEGUI::FrameWindow* message = (CEGUI::FrameWindow*) win_mgr.getWindow("DeleteChar");
-	
-	message->setVisible(false);
-	message->setModalState(false);
+	m_document->hideQuestionDialog ();
+
 	return true;
 }
 
