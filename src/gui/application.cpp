@@ -32,7 +32,7 @@
 //#include "reloadtab.h"
 //content editor
 #include "contenteditor.h"
-#include "guiTabs.h"
+#include "guitabs.h"
 #endif
 //#include "CEGUI/ScriptingModules/LuaScriptModule/CEGUILua.h"
 
@@ -564,6 +564,7 @@ bool Application::initOgre()
 		}
 	}
 
+    m_ogre_root->getRenderSystem()->addListener(this);
 	Options::getInstance ()->setUsedVideoDriver (m_ogre_root->getRenderSystem()->getName ());
 
 	setApplicationIcon ();
@@ -787,7 +788,9 @@ bool Application::initGettext()
 {
 	DEBUG("initializing internationalisation");
 	Ogre::StringVectorPtr path = Ogre::ResourceGroupManager::getSingleton().findResourceLocation("translation", "*");
+	DEBUG("Application initializing Gettext lib with [%s]", path.get ()->at (0).c_str ());
 	Gettext::init("", path.get()->at(0));
+	DEBUG("Application initializing Gettext locale is [%s]", Gettext::getLocale ());
 	return true;
 }
 
@@ -1350,9 +1353,28 @@ void Application::windowFocusChange (Ogre::RenderWindow* rw)
 {
 	// Only act for own renderwindow. Can it happen that we receive something else here? I don't know... doesn't hurt to check.
 	if (rw && rw == m_window)
-	{
+    {
 		// Currently this is a placeholder function.
 		// There is already a function reacting to the application losing focus. Maybe it should be moved here.
 		// Still under investigation. (Augustin Preda, 2011.10.26).
 	}
+}
+
+void Application::eventOccurred(const Ogre::String &eventName, const Ogre::NameValuePairList *parameters)
+{
+    if (m_ogre_root)
+    {
+        if (eventName == "DeviceLost")
+        {
+        }
+        else if (eventName == "DeviceCreated" || eventName == "DeviceRestored")
+        {
+            // handle lost device restored situations
+            // DeviceCreated is called when Device is dragged from one Display to another
+            // DeviceRestored is called when RenderWindow is minimized with Alt+Tab or the Windows key
+            m_ogre_root->clearEventTimes();
+            ((Ogre::TexturePtr)Ogre::TextureManager::getSingleton().getByName("minimap_tex", "General"))->getBuffer()->getRenderTarget()->getViewport(0)->update();
+            CEGUI::System::getSingleton().invalidateAllCachedRendering();
+        }
+    }
 }
