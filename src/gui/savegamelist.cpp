@@ -24,6 +24,10 @@
 #endif
 #include "ceguiutility.h"
 
+// Sound operations helper.
+#include "soundhelper.h"
+
+
 SavegameList::SavegameList (Document* doc, const std::string& ceguiSkinName)
 
 	: Window(doc)
@@ -59,6 +63,7 @@ SavegameList::SavegameList (Document* doc, const std::string& ceguiSkinName)
 	btn->setPosition(CEGUI::UVector2(cegui_reldim(0.1f), cegui_reldim( 0.85f)));
 	btn->setSize(CEGUI::UVector2(cegui_reldim(0.4f), cegui_reldim( 0.05f)));
 	btn->subscribeEvent(CEGUI::PushButton::EventClicked, CEGUI::Event::Subscriber(&SavegameList::onNewCharClicked, this));
+	btn->subscribeEvent(CEGUI::PushButton::EventMouseEnters, CEGUI::Event::Subscriber(&SavegameList::onItemButtonHover, this));
 	btn->setWantsMultiClickEvents(false);
 	btn->setInheritsAlpha(false);
 	if (btn->isPropertyPresent ("NormalImage"))
@@ -163,6 +168,7 @@ void SavegameList::update()
 				saveItem = (CEGUI::Window*) win_mgr.loadWindowLayout("saveitem.layout", s.str());
 				m_currentSelected = saveItem;
 				saveItem->subscribeEvent(CEGUI::PushButton::EventClicked, CEGUI::Event::Subscriber(&SavegameList::onSavegameChosen, this));
+				saveItem->subscribeEvent(CEGUI::PushButton::EventMouseEnters, CEGUI::Event::Subscriber(&SavegameList::onItemButtonHover, this));
 				m_window->addChildWindow(saveItem);
 				saveItem->show();
 
@@ -176,6 +182,7 @@ void SavegameList::update()
 				saveItem->getChild(s.str().append("SaveItemRoot/DecriptionLabel"))->setMousePassThroughEnabled(true);
 				saveItem->getChild(s.str().append("SaveItemRoot/Avatar"))->setMousePassThroughEnabled(true);
 				saveItem->getChild(s.str().append("SaveItemRoot/DelChar"))->subscribeEvent(CEGUI::PushButton::EventClicked, CEGUI::Event::Subscriber(&SavegameList::onDeleteCharClicked, this));	
+				saveItem->getChild(s.str().append("SaveItemRoot/DelChar"))->subscribeEvent (CEGUI::PushButton::EventMouseEnters, CEGUI::Event::Subscriber(&SavegameList::onItemButtonHover, this));
 			}
 			
 			// set the proper Image
@@ -303,6 +310,18 @@ void SavegameList::updateTranslation()
 	btn->setText((CEGUI::utf8*) gettext("Create"));
 }
 
+
+/**
+* \fn bool onItemButtonHover(const CEGUI::EventArgs& evt)
+* \brief Handle the hovering of a menu item
+*/
+bool SavegameList::onItemButtonHover(const CEGUI::EventArgs& evt)
+{
+	SoundHelper::playAmbientSoundGroup ("main_menu_hover_item");
+	return true;
+}
+
+
 bool SavegameList::onSavegameChosen(const CEGUI::EventArgs& evt)
 {
 	const CEGUI::WindowEventArgs& we = static_cast<const CEGUI::WindowEventArgs&>(evt);
@@ -329,6 +348,9 @@ bool SavegameList::onSavegameChosen(const CEGUI::EventArgs& evt)
 	m_document->setSaveFile(name.c_str());
 	DEBUGX("selected Savegame %s", sitm->m_data.c_str());
 
+	// Also play the click sound.
+	SoundHelper::playAmbientSoundGroup ("main_menu_click_item");
+
 	return true;
 }
 
@@ -345,6 +367,9 @@ bool SavegameList::onSavegameSelected(const CEGUI::EventArgs& evt)
 
 bool SavegameList::onNewCharClicked(const CEGUI::EventArgs& evt)
 {
+	// Also play the click sound.
+	SoundHelper::playAmbientSoundGroup ("main_menu_click_item");
+
 	m_document->onCreateNewCharButton();
 	return true;
 }
@@ -356,6 +381,9 @@ bool SavegameList::onDeleteCharClicked(const CEGUI::EventArgs& evt)
 	const CEGUI::WindowEventArgs& we = static_cast<const CEGUI::WindowEventArgs&>(evt);
 	onSavegameChosen(CEGUI::WindowEventArgs(we.window->getParent()));
 	
+	// Also play the notification sound.
+	SoundHelper::playAmbientSoundGroup ("main_menu_notification");
+
 	m_document->showQuestionDialog ();
 
 	return true;
@@ -363,6 +391,9 @@ bool SavegameList::onDeleteCharClicked(const CEGUI::EventArgs& evt)
 
 bool SavegameList::onDeleteCharConfirmClicked(const CEGUI::EventArgs& evt)
 {
+	// Also play the click sound.
+	SoundHelper::playAmbientSoundGroup ("main_menu_click_item");
+
 	CEGUI::WindowManager& win_mgr = CEGUI::WindowManager::getSingleton();
 	m_document->hideQuestionDialog ();
 
@@ -404,6 +435,9 @@ bool SavegameList::onDeleteCharConfirmClicked(const CEGUI::EventArgs& evt)
 
 bool SavegameList::onDeleteCharAbortClicked(const CEGUI::EventArgs& evt)
 {
+	// Also play the click sound.
+	SoundHelper::playAmbientSoundGroup ("main_menu_click_item");
+
 	CEGUI::WindowManager& win_mgr = CEGUI::WindowManager::getSingleton();
 	m_document->hideQuestionDialog ();
 
@@ -412,6 +446,9 @@ bool SavegameList::onDeleteCharAbortClicked(const CEGUI::EventArgs& evt)
 
 bool SavegameList::onSavegameDoubleClick(const CEGUI::EventArgs& evt)
 {
+	// Also play the click sound.
+	SoundHelper::playAmbientSoundGroup ("main_menu_click_item");
+
 	onSavegameSelected(evt);
 	return true;
 }
