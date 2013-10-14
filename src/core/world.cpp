@@ -404,8 +404,6 @@ void World::registerRegionData(RegionData* data, int id)
 
 bool World::createRegion(short region)
 {
-
-
 	DEBUGX("creating region %i",region);
 	int type = 1;
 	if (type==1)
@@ -501,7 +499,7 @@ void World::updateLogins()
 			{
 				DEBUG("got savegame from slot %i",(*i));
 				
-				if (m_player_slots->size() < m_max_nr_players)
+				if (m_player_slots->size() < (unsigned)m_max_nr_players)
 				{
 					handleSavegame(data,*i);
 				}
