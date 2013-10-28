@@ -208,6 +208,8 @@ ENDIF()
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/src/core)
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/src/gui)
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/src/gui/contenteditor)
+INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/src/gussound)
+ADD_DEFINITIONS(-DGUSSOUND_STANDALONE)
 INCLUDE_DIRECTORIES(${OGRE_INCLUDE_DIRS})
 INCLUDE_DIRECTORIES(${OGRE_RTShaderSystem_INCLUDE_DIR})
 IF (WIN32)
@@ -305,9 +307,18 @@ ELSE()
     )
 ENDIF()
 
+SET(SRCS_GUSSOUND
+    ./src/gussound/goggstreamedsound.cpp
+    ./src/gussound/gopenal.cpp
+    ./src/gussound/gussound.cpp
+    ./src/gussound/gussoundutil/stringutil.cpp
+    ./src/gussound/gussoundutil/timer.cpp
+    )
+
 SET(SRCS
   ${SRCS_TINYXML}
   ${SRCS_ENET}
+  ${SRCS_GUSSOUND}
   ${HEADER_FILES}
   ./src/core/nlfg.cpp
   ./src/core/worldobject.cpp
@@ -370,11 +381,9 @@ SET(SRCS
   ./src/gui/minimapwindow.cpp
   ./src/gui/worldmap.cpp
   ./src/gui/mainmenu.cpp
-  ./src/gui/ogg.cpp
   ./src/gui/charcreate.cpp
   ./src/gui/ceguiutility.cpp
   ./src/gui/tooltipmanager.cpp
-  ./src/gui/music.cpp
   ./src/gui/controlpanel.cpp
   ./src/gui/inventory.cpp
   ./src/gui/tradewindow.cpp
@@ -396,7 +405,8 @@ SET(SRCS
   ./src/gui/graphicobjectrenderinfo.cpp
   ./src/gui/graphicobject.cpp
   ./src/gui/questinfo.cpp
-  ./src/gui/sound.cpp
+  ./src/gui/soundhelper.cpp
+  ./src/gui/soundobject.cpp
   ./src/gui/tooltip.cpp
   ./src/gui/optionswindow.cpp
   ./src/gui/clipboard.cpp

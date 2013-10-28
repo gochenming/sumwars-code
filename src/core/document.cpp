@@ -21,8 +21,8 @@
 #include "fstream"
 #include "document.h"
 
-#include "sound.h"
-#include "music.h"
+//#include "sound.h"
+//#include "music.h"
 
 #include "networkstruct.h"
 #include "projectile.h"
@@ -45,6 +45,9 @@
 #include "CEGUI/CEGUI.h"
 
 #include <physfs.h>
+
+// Sound operations helper.
+#include "soundhelper.h"
 
 #ifdef SUMWARS_BUILD_WITH_ONLINE_SERVICES
 #include "onlineservicesmanager.h"
@@ -390,6 +393,8 @@ void Document::onButtonSaveExitClicked ( )
 	getGUIState()->m_shown_windows = SAVE_EXIT;
 	m_modified |= WINDOWS_MODIFIED;
 
+	SoundHelper::playAmbientSoundGroup ("main_menu_click_item");
+
 	if (m_state == INACTIVE)
 	{
 		saveSettings();
@@ -400,7 +405,7 @@ void Document::onButtonSaveExitClicked ( )
 
 void Document::onButtonSaveExitConfirm()
 {
-
+	SoundHelper::playAmbientSoundGroup ("main_menu_click_item");
 
 	if (m_state!=SHUTDOWN_REQUEST)
 	{
@@ -431,12 +436,16 @@ void Document::onButtonSaveExitConfirm()
 
 void Document::onButtonSaveExitAbort()
 {
+	SoundHelper::playAmbientSoundGroup ("main_menu_click_item");
+
 	getGUIState()->m_shown_windows = CONTROL_PANEL;
 	m_modified |= WINDOWS_MODIFIED;
 }
 
 void Document::onButtonCredits()
 {
+	SoundHelper::playAmbientSoundGroup ("main_menu_click_item");
+
 	getGUIState ()->m_shown_windows = CREDITS;
 	m_modified = WINDOWS_MODIFIED;
 }
@@ -908,6 +917,7 @@ void Document::onButtonInventoryClicked()
 	if (!checkSubwindowsAllowed())
 		return;
 
+	SoundHelper::playAmbientSoundGroup ("main_menu_click_item");
 	
 	getGUIState()->m_shown_windows ^= INVENTORY;
 	if (getGUIState()->m_shown_windows & INVENTORY)
@@ -939,6 +949,7 @@ void Document::onButtonCharInfoClicked()
 	if (!checkSubwindowsAllowed())
 		return;
 
+	SoundHelper::playAmbientSoundGroup ("main_menu_click_item");
 	
 	getGUIState()->m_shown_windows ^= CHARINFO;
 	if (getGUIState()->m_shown_windows & CHARINFO)
@@ -954,6 +965,8 @@ void Document::onButtonPartyInfoClicked()
 {
 	if (!checkSubwindowsAllowed())
 		return;
+
+	SoundHelper::playAmbientSoundGroup ("main_menu_click_item");
 
 	getGUIState()->m_shown_windows ^= PARTY;
 	// PartyInfo oeffnen wenn es gerade geschlossen ist und schliessen, wenn er geoeffnet ist
@@ -973,6 +986,8 @@ void Document::onButtonSkilltreeClicked(bool skill_right, bool use_alternate)
 {
 	if (!checkSubwindowsAllowed())
 		return;
+
+	SoundHelper::playAmbientSoundGroup ("main_menu_click_item");
 
 	getGUIState()->m_shown_windows ^= SKILLTREE;
 	if (getGUIState()->m_shown_windows & SKILLTREE)
@@ -997,6 +1012,8 @@ void Document::onButtonSkilltreeClicked(bool skill_right, bool use_alternate)
 
 void Document::onButtonOpenChatClicked()
 {
+	SoundHelper::playAmbientSoundGroup ("main_menu_click_item");
+
 	// fuer Debugging sehr nuetzlich, das zuzulassen
 	//if (!checkSubwindowsAllowed())
 	//		return;
@@ -1011,6 +1028,8 @@ void Document::onButtonQuestInfoClicked()
 {
 	if (!checkSubwindowsAllowed())
 		return;
+
+	SoundHelper::playAmbientSoundGroup ("main_menu_click_item");
 
 	getGUIState()->m_shown_windows ^= QUEST_INFO;
 	// Charakterinfo oeffnen wenn es gerade geschlossen ist und schliessen, wenn es geoeffnet ist
@@ -1037,6 +1056,8 @@ void Document::onButtonMinimapClicked()
 
 void Document::onButtonOptionsClicked()
 {
+	SoundHelper::playAmbientSoundGroup ("main_menu_click_item");
+
 	if (!checkSubwindowsAllowed() && getGUIState()->m_sheet ==  Document::GAME_SCREEN)
 	{
 		DEBUG ("Subwindows are allowed, and Current state: GAME_SCREEN; so you're not allowed to toggle this window... for some reason");
