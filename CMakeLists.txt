@@ -23,7 +23,7 @@ MESSAGE(STATUS "")
 OPTION(SUMWARS_NO_TINYXML "Do not use bundled, in-source TinyXML Lib" OFF)
 OPTION(SUMWARS_NO_ENET "Do not use bundled, in-source ENET Lib" OFF)
 OPTION(SUMWARS_BUILD_TOOLS "Builds editor tools (not needed for gameplay, only useful for content authors)" ON)
-OPTION(SUMWARS_BUILD_WITH_ONLINE_SERVICE "Builds enables the online services)" ON)
+OPTION(SUMWARS_BUILD_WITH_ONLINE_SERVICE "Builds enables the online services)" OFF)
 OPTION(SUMWARS_UPDATE_HG_REVISION "Option to enable or disable automatic revision checking" ON)
 IF(WIN32)
   OPTION(SUMWARS_POST_BUILD_COPY "After a build, copy the executable to the project folder (Win32)" ON)
@@ -147,10 +147,8 @@ FIND_PACKAGE(OGRE REQUIRED)
 
 IF("${OGRE_VERSION_NAME}" STREQUAL "Cthugha")
   set(SUMWARS_OGRE_SINGLETON "ms_Singleton")
-ELSEIF("${OGRE_VERSION_NAME}" STREQUAL "Byatis")
-  set(SUMWARS_OGRE_SINGLETON "msSingleton")
 ELSE()
-  MESSAGE(SEND_ERROR "You need Ogre 1.7 Cthugha or 1.8 Byatis to build this.")
+  set(SUMWARS_OGRE_SINGLETON "msSingleton")
 ENDIF()
 
 SET(SUMWARS_OGRE_PLUGIN_DIR_REL ${OGRE_PLUGIN_DIR_REL}) 
@@ -175,7 +173,7 @@ IF (WIN32)
  FIND_PACKAGE(GNUWIN REQUIRED)
 ENDIF (WIN32)
 FIND_PACKAGE(OIS REQUIRED)
-FIND_PACKAGE(Lua51 REQUIRED)
+FIND_PACKAGE(Lua REQUIRED)
 FIND_PACKAGE(CEGUI REQUIRED)
 FIND_PACKAGE(CEGUIOGRE REQUIRED)
 FIND_PACKAGE(OpenAL REQUIRED)
@@ -246,6 +244,7 @@ IF(SUMWARS_BUILD_TOOLS OR SUMWARS_BUILD_WITH_ONLINE_SERVICE)
   ENDIF()
   IF(SUMWARS_BUILD_WITH_ONLINE_SERVICE)
     #cpp-netlib for the http client
+    find_package( OpenSSL )
     add_subdirectory(src/cpp-netlib)
     INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/src/cpp-netlib/)
     set(CPPNETLIB_LIBS cppnetlib-client-connections cppnetlib-server-parsers cppnetlib-uri)
@@ -470,6 +469,16 @@ SET(LINK_LIBS
   ${CMAKE_THREAD_LIBS_INIT}
   ${CPPNETLIB_LIBS}
   )
+  
+IF(SUMWARS_BUILD_WITH_ONLINE_SERVICE)
+SET(LINK_LIBS
+  ${LINK_LIBS}
+  ${CPPNETLIB_LIBS}
+  ${OPENSSL_CRYPTO_LIBRARY}
+  ${OPENSSL_SSL_LIBRARY}
+  )
+  
+ENDIF()
 IF(SUMWARS_NO_TINYXML)
   SET(LINK_LIBS ${LINK_LIBS} ${TINYXML_LIBRARIES})
 ENDIF()
