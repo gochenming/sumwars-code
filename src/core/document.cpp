@@ -21,8 +21,9 @@
 #include "fstream"
 #include "document.h"
 
-#include "sound.h"
-#include "music.h"
+// TODO: remove when no longer needed.
+//#include "sound.h"
+//#include "music.h"
 
 #include "networkstruct.h"
 #include "projectile.h"
@@ -45,6 +46,11 @@
 #include "CEGUI/CEGUI.h"
 
 #include <physfs.h>
+
+// Sound operations helper.
+#include "soundhelper.h"
+
+#include "ceguiutility.h"
 
 #ifdef SUMWARS_BUILD_WITH_ONLINE_SERVICES
 #include "onlineservicesmanager.h"
@@ -129,10 +135,10 @@ void Document::startGame(bool server)
 	m_state = LOAD_SAVEGAME;
 }
 
-void Document::setSaveFile(std::string s)
+void Document::setSaveFile(std::string saveFile)
 {
 	// we are using std::streams here, not PHYSFS, therefore we also have to use absolute paths
-	std::string savePath = SumwarsHelper::getStorageBasePath() + "/" + SumwarsHelper::savePath() + "/" + s;
+	std::string savePath = SumwarsHelper::getStorageBasePath() + "/" + SumwarsHelper::savePath() + "/" + saveFile;
 
 	std::fstream file(savePath.c_str(),std::ios::in| std::ios::binary);
 	if (file.is_open())
@@ -141,7 +147,7 @@ void Document::setSaveFile(std::string s)
 		unsigned char* data=0;
 		m_save_file = savePath;
 
-		DEBUG ("Loaded save file %s", s.c_str());
+		DEBUG ("Loaded save file %s", saveFile.c_str());
 
 		file.get(bin);
 
@@ -168,7 +174,7 @@ void Document::setSaveFile(std::string s)
 		if (data)
 			delete[] data;
 		
-		Options::getInstance()->setDefaultSavegame(s);
+		Options::getInstance()->setDefaultSavegame (saveFile);
 	}
 	else
 	{
@@ -177,7 +183,7 @@ void Document::setSaveFile(std::string s)
 			delete m_temp_player;
 			m_temp_player =0;
 		}
-		WARNING("Could not load file %s", s.c_str());
+		WARNING("Could not load file [%s]", saveFile.c_str());
 	}
 	m_modified |= SAVEGAME_MODIFIED;
 	file.close();
@@ -390,6 +396,8 @@ void Document::onButtonSaveExitClicked ( )
 	getGUIState()->m_shown_windows = SAVE_EXIT;
 	m_modified |= WINDOWS_MODIFIED;
 
+	SoundHelper::playAmbientSoundGroup ("main_menu_click_item");
+
 	if (m_state == INACTIVE)
 	{
 		saveSettings();
@@ -400,7 +408,7 @@ void Document::onButtonSaveExitClicked ( )
 
 void Document::onButtonSaveExitConfirm()
 {
-
+	SoundHelper::playAmbientSoundGroup ("main_menu_click_item");
 
 	if (m_state!=SHUTDOWN_REQUEST)
 	{
@@ -431,12 +439,16 @@ void Document::onButtonSaveExitConfirm()
 
 void Document::onButtonSaveExitAbort()
 {
+	SoundHelper::playAmbientSoundGroup ("main_menu_click_item");
+
 	getGUIState()->m_shown_windows = CONTROL_PANEL;
 	m_modified |= WINDOWS_MODIFIED;
 }
 
 void Document::onButtonCredits()
 {
+	SoundHelper::playAmbientSoundGroup ("main_menu_click_item");
+
 	getGUIState ()->m_shown_windows = CREDITS;
 	m_modified = WINDOWS_MODIFIED;
 }
@@ -846,11 +858,11 @@ void Document::onButtonHostGame()
 	{
 		// Show a notification.
 		CEGUI::WindowManager& win_mgr = CEGUI::WindowManager::getSingleton();
-		CEGUI::FrameWindow* message = (CEGUI::FrameWindow*) win_mgr.getWindow("WarningDialogWindow");
+		CEGUI::FrameWindow* message = (CEGUI::FrameWindow*) CEGUIUtility::getWindow("WarningDialogWindow");
 		message->setInheritsAlpha(false);
 		message->setVisible(true);
 		message->setModalState(true);
-		win_mgr.getWindow( "WarningDialogLabel")->setText((CEGUI::utf8*) gettext("Please select a character first!"));
+		CEGUIUtility::getWindow ("WarningDialogWindow/WarningDialogLabel")->setText((CEGUI::utf8*) gettext ("Please select a character first!"));
 
 		DEBUG ("Warning: Tried to host a game without a selected char!");
 		return;
@@ -867,11 +879,11 @@ void Document::onButtonJoinGame()
 	{
 		// Show a notification.
 		CEGUI::WindowManager& win_mgr = CEGUI::WindowManager::getSingleton();
-		CEGUI::FrameWindow* message = (CEGUI::FrameWindow*) win_mgr.getWindow("WarningDialogWindow");
+		CEGUI::FrameWindow* message = (CEGUI::FrameWindow*) CEGUIUtility::getWindow("WarningDialogWindow");
 		message->setInheritsAlpha(false);
 		message->setVisible(true);
 		message->setModalState(true);
-		win_mgr.getWindow( "WarningDialogLabel")->setText((CEGUI::utf8*) gettext("Please select a character first!"));
+		CEGUIUtility::getWindow ("WarningDialogWindow/WarningDialogLabel")->setText((CEGUI::utf8*) gettext("Please select a character first!"));
 
 		DEBUG ("Warning: Tried to join a game without a selected char!");
 		return;
@@ -908,6 +920,7 @@ void Document::onButtonInventoryClicked()
 	if (!checkSubwindowsAllowed())
 		return;
 
+	SoundHelper::playAmbientSoundGroup ("main_menu_click_item");
 	
 	getGUIState()->m_shown_windows ^= INVENTORY;
 	if (getGUIState()->m_shown_windows & INVENTORY)
@@ -939,6 +952,7 @@ void Document::onButtonCharInfoClicked()
 	if (!checkSubwindowsAllowed())
 		return;
 
+	SoundHelper::playAmbientSoundGroup ("main_menu_click_item");
 	
 	getGUIState()->m_shown_windows ^= CHARINFO;
 	if (getGUIState()->m_shown_windows & CHARINFO)
@@ -954,6 +968,8 @@ void Document::onButtonPartyInfoClicked()
 {
 	if (!checkSubwindowsAllowed())
 		return;
+
+	SoundHelper::playAmbientSoundGroup ("main_menu_click_item");
 
 	getGUIState()->m_shown_windows ^= PARTY;
 	// PartyInfo oeffnen wenn es gerade geschlossen ist und schliessen, wenn er geoeffnet ist
@@ -973,6 +989,8 @@ void Document::onButtonSkilltreeClicked(bool skill_right, bool use_alternate)
 {
 	if (!checkSubwindowsAllowed())
 		return;
+
+	SoundHelper::playAmbientSoundGroup ("main_menu_click_item");
 
 	getGUIState()->m_shown_windows ^= SKILLTREE;
 	if (getGUIState()->m_shown_windows & SKILLTREE)
@@ -997,6 +1015,8 @@ void Document::onButtonSkilltreeClicked(bool skill_right, bool use_alternate)
 
 void Document::onButtonOpenChatClicked()
 {
+	SoundHelper::playAmbientSoundGroup ("main_menu_click_item");
+
 	// fuer Debugging sehr nuetzlich, das zuzulassen
 	//if (!checkSubwindowsAllowed())
 	//		return;
@@ -1011,6 +1031,8 @@ void Document::onButtonQuestInfoClicked()
 {
 	if (!checkSubwindowsAllowed())
 		return;
+
+	SoundHelper::playAmbientSoundGroup ("main_menu_click_item");
 
 	getGUIState()->m_shown_windows ^= QUEST_INFO;
 	// Charakterinfo oeffnen wenn es gerade geschlossen ist und schliessen, wenn es geoeffnet ist
@@ -1037,6 +1059,8 @@ void Document::onButtonMinimapClicked()
 
 void Document::onButtonOptionsClicked()
 {
+	SoundHelper::playAmbientSoundGroup ("main_menu_click_item");
+
 	if (!checkSubwindowsAllowed() && getGUIState()->m_sheet ==  Document::GAME_SCREEN)
 	{
 		DEBUG ("Subwindows are allowed, and Current state: GAME_SCREEN; so you're not allowed to toggle this window... for some reason");
@@ -1963,17 +1987,17 @@ void Document::showWarning (const std::string& textMessage)
 {
 	// Show a notification.
 	CEGUI::WindowManager& win_mgr = CEGUI::WindowManager::getSingleton();
-	if (! win_mgr.isWindowPresent ("WarningDialogWindow"))
+	if (! CEGUIUtility::isWindowPresent ("WarningDialogWindow"))
 	{
 		DEBUG ("Could not display the warning widget: [WarningDialogWindow]");
 		return;
 	}
 
-	CEGUI::FrameWindow* message = (CEGUI::FrameWindow*) win_mgr.getWindow("WarningDialogWindow");
+	CEGUI::FrameWindow* message = (CEGUI::FrameWindow*) CEGUIUtility::getWindow("WarningDialogWindow");
 	message->setInheritsAlpha(false);
 	message->setVisible(true);
 	message->setModalState(true);
-	win_mgr.getWindow( "WarningDialogLabel")->setText((CEGUI::utf8*) textMessage.c_str ());
+	CEGUIUtility::getWindow ("WarningDialogWindow/WarningDialogLabel")->setText((CEGUI::utf8*) textMessage.c_str ());
 
 	getGUIState()->m_shown_windows |= MESSAGE;
 	m_modified |= WINDOWS_MODIFIED;
@@ -1986,9 +2010,9 @@ void Document::hideWarning ()
 	// Show a notification.
 	CEGUI::WindowManager& win_mgr = CEGUI::WindowManager::getSingleton();
 
-	if (win_mgr.isWindowPresent ("WarningDialogWindow"))
+	if (CEGUIUtility::isWindowPresent ("WarningDialogWindow"))
 	{
-		CEGUI::Window* widget = win_mgr.getWindow("WarningDialogWindow");
+		CEGUI::Window* widget = CEGUIUtility::getWindow("WarningDialogWindow");
 		if (widget->isVisible ())
 		{
 			widget->setVisible (false);
@@ -2008,13 +2032,14 @@ void Document::showQuestionDialog ()
 {
 	// Show a notification.
 	CEGUI::WindowManager& win_mgr = CEGUI::WindowManager::getSingleton();
-	if (! win_mgr.isWindowPresent ("QuestionInfoRoot"))
+	CEGUI::String widgetName = CEGUIUtility::getNameForWidget ("MainMenu/MainMenuRoot/QuestionInfoRoot");
+	if (! CEGUIUtility::isWindowPresent (widgetName))
 	{
-		DEBUG ("Could not display the warning widget: [QuestionInfoRoot]");
+		DEBUG ("Could not display the warning widget: [%s]", widgetName.c_str ());
 		return;
 	}
 
-	CEGUI::FrameWindow* message = (CEGUI::FrameWindow*) win_mgr.getWindow("QuestionInfoRoot");
+	CEGUI::FrameWindow* message = (CEGUI::FrameWindow*) CEGUIUtility::getWindow (widgetName);
 	message->setInheritsAlpha(false);
 	message->setVisible(true);
 	message->setModalState(true);
@@ -2029,10 +2054,10 @@ void Document::hideQuestionDialog ()
 {
 	// Show a notification.
 	CEGUI::WindowManager& win_mgr = CEGUI::WindowManager::getSingleton();
-
-	if (win_mgr.isWindowPresent ("QuestionInfoRoot"))
+	CEGUI::String widgetName = CEGUIUtility::getNameForWidget ("MainMenu/MainMenuRoot/QuestionInfoRoot");
+	if (CEGUIUtility::isWindowPresent (widgetName))
 	{
-		CEGUI::Window* widget = win_mgr.getWindow("QuestionInfoRoot");
+		CEGUI::Window* widget = CEGUIUtility::getWindow (widgetName);
 		if (widget && widget->isVisible ())
 		{
 			widget->setVisible (false);
