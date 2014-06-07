@@ -1,0 +1,23 @@
+Changes in version 0.5.8:
+
+* Scripting:
+	- added support for Lua 5.2
+
+* User Interface:
+	- added support for CEGUI 0.8
+	- removed support dor CEGUI 0.7
+
+* Graphics:
+	- added support for Ogre 1.9
+
+* Translation:
+	- spanish translation greatly updated
+
+* Sound and Music:
+	- sound engine reworked
+	- added sounds for the GUI
+	- added gameplay sounds
+
+* General:
+	- fixed a number of bugs
+	- Poco dependency replaced with Boost
