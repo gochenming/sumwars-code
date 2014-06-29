@@ -72,7 +72,6 @@ void RegionData::addObjectGroup(ObjectGroupName group_name, int prio, int number
 	newgroup.m_group_name = group_name;
 	newgroup.m_probability = probability;
 	newgroup.m_number = number;
-	newgroup.m_probability = probability;
 	newgroup.m_decoration = decoration;
 	
 	m_object_groups.insert(std::make_pair(prio,newgroup));
@@ -2846,7 +2845,7 @@ Item*  Region::getItemAt(Vector pos)
 	int id = sx*10000 + sy;
 
 	it = m_drop_item_locations.find(id);
-	if (it == m_drop_items.end())
+	if (it == m_drop_item_locations.end())
 	{
 		return 0;
 	}
