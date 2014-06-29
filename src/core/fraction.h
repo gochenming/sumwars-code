@@ -59,15 +59,14 @@ class Fraction
 		
 		/**
 		 * \fn Fraction(Id id, Type type)
-		 * \brief Konstruktor
+		 * \brief Constructor
 		 */
-		Fraction(Id id, Type type)
+		Fraction(Id id, Type type): 
+			m_id(id), 
+			m_type(type)
 		{
-			m_id = id;
-			m_type = type;
 			m_relations[DEFAULT] = NEUTRAL;
-		}
-		
+		};		
 		
 		/**
 		 * \fn int getId()

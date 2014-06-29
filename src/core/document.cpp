@@ -1660,7 +1660,6 @@ void Document::update(float time)
 
 			getGUIState()->m_sheet= MAIN_MENU;
 			getGUIState()->m_shown_windows = START_MENU;
-			m_modified =WINDOWS_MODIFIED;
 
 			m_state = INACTIVE;
 
@@ -1909,7 +1908,7 @@ void Document::writeSavegame(bool writeShortkeys)
             if(OnlineServicesManager::getSingletonPtr() && OnlineServicesManager::getSingleton().userLoggedIn())
             {
                 std::string name = getLocalPlayer()->getName().getRawText();
-                std::string rsgrp = OnlineServicesManager::getSingleton().getUserDataResGroupId();
+                //std::string rsgrp = OnlineServicesManager::getSingleton().getUserDataResGroupId();
                 /*std::stringstream* imgStream;
                 if(Ogre::ResourceGroupManager::getSingleton().resourceExists(rsgrp, name + ".png"))
                 {
